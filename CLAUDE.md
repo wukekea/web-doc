@@ -159,3 +159,9 @@ note/
 7. 使用 Tailwind CSS 编写样式，遵循上述设计规范
 8. 组件圆角统一使用 rounded-lg 或 rounded-xl
 9. 阴影效果使用 shadow-md 或 shadow-lg，保持柔和
+
+## 代码质量
+
+- 每次编辑代码后自动运行格式化、代码检查和类型检查
+- 开发完成后使用 `/simplify` 审查代码质量
+- 前端组件开发使用 `/frontend-design` skill 确保设计质量
