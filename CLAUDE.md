@@ -19,6 +19,7 @@
 - **构建工具**: Vite
 - **国际化**: Vue I18n
 - **状态管理**: Pinia
+- **样式方案**: Tailwind CSS
 
 ## 常用命令
 
@@ -61,6 +62,53 @@ note/
 ├── public/               # 静态资源
 └── index.html            # HTML 入口
 ```
+
+## 界面设计规范
+
+### 整体风格
+- 风格定位：圆润柔和
+- 圆角：使用较大的圆角值（rounded-lg 或 rounded-xl）
+- 阴影：柔和的阴影效果，营造层次感
+
+### 颜色方案
+
+#### 日间模式（默认）
+- 主色调：蓝色系
+- 背景色：白色/浅灰色
+- 文字色：深灰色
+- 强调色：蓝色（用于按钮、高亮等）
+
+#### 夜间模式
+- 背景色：深灰/近黑色
+- 文字色：浅灰色/白色
+- 强调色：浅蓝色
+
+### CSS 变量定义
+```css
+/* 日间模式 */
+--bg-primary: #ffffff;
+--bg-secondary: #f3f4f6;
+--text-primary: #1f2937;
+--text-secondary: #6b7280;
+--accent-color: #3b82f6;
+
+/* 夜间模式 */
+--bg-primary: #1f2937;
+--bg-secondary: #111827;
+--text-primary: #f9fafb;
+--text-secondary: #d1d5db;
+--accent-color: #60a5fa;
+```
+
+### 间距规范
+- 组件内边距：p-4 到 p-6
+- 组件间距：m-4 或 gap-4
+- 容器边距：px-6 py-4
+
+### 字体规范
+- 字体族：使用系统默认字体栈
+- 标题：text-lg 到 text-2xl，font-semibold
+- 正文：text-base，font-normal
 
 ## 核心功能模块
 
@@ -108,3 +156,6 @@ note/
 4. 思维导图支持拖拽和缩放操作
 5. 存储层设计为可插拔，便于后续迁移到后端数据库
 6. 主题切换使用 CSS 变量，确保样式一致
+7. 使用 Tailwind CSS 编写样式，遵循上述设计规范
+8. 组件圆角统一使用 rounded-lg 或 rounded-xl
+9. 阴影效果使用 shadow-md 或 shadow-lg，保持柔和
