@@ -5,7 +5,9 @@
   "toolbar": {
     "newNote": "New Note",
     "save": "Save",
-    "export": "Export"
+    "export": "Export",
+    "delete": "Delete",
+    "addChild": "Add Child"
   },
   "theme": {
     "light": "Light Mode",
@@ -16,8 +18,14 @@
     "en": "English"
   },
   "editor": {
-    "title": "Title",
+    "title": "Edit Note",
+    "titleLabel": "Title",
     "content": "Content",
-    "placeholder": "Enter content..."
+    "placeholder": "Enter content...",
+    "cancel": "Cancel"
+  },
+  "mindmap": {
+    "empty": "Click the button in the bottom right to create your first note",
+    "doubleClickToEdit": "Double-click node to edit"
   }
 }

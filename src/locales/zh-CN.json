@@ -5,7 +5,9 @@
   "toolbar": {
     "newNote": "新建笔记",
     "save": "保存",
-    "export": "导出"
+    "export": "导出",
+    "delete": "删除",
+    "addChild": "添加子节点"
   },
   "theme": {
     "light": "日间模式",
@@ -16,8 +18,14 @@
     "en": "English"
   },
   "editor": {
-    "title": "标题",
+    "title": "编辑笔记",
+    "titleLabel": "标题",
     "content": "内容",
-    "placeholder": "请输入内容..."
+    "placeholder": "请输入内容...",
+    "cancel": "取消"
+  },
+  "mindmap": {
+    "empty": "点击右下角按钮创建第一个笔记",
+    "doubleClickToEdit": "双击节点编辑"
   }
 }

@@ -10,15 +10,28 @@ export const useNotesStore = defineStore("notes", () => {
   const notes = ref<Map<string, NoteNode>>(new Map());
   const rootIds = ref<string[]>([]);
 
-  // 初始化：从存储加载笔记
+  // 初始化：从存储加载笔记，如果没有则创建示例数据
   async function init() {
     const data = await storage.get<{ notes: NoteNode[]; rootIds: string[] }>(
       STORAGE_KEY,
     );
-    if (data) {
+    if (data && data.notes.length > 0) {
       notes.value = new Map(data.notes.map((n) => [n.id, n]));
       rootIds.value = data.rootIds;
+    } else {
+      // 创建示例数据
+      createSampleData();
     }
+  }
+
+  // 创建示例数据
+  function createSampleData() {
+    const root = createNote("我的笔记");
+    const child1 = createNote("学习笔记", root.id);
+    const child2 = createNote("工作计划", root.id);
+    createNote("Vue 3 学习", child1.id);
+    createNote("TypeScript 笔记", child1.id);
+    createNote("本周任务", child2.id);
   }
 
   // 保存到存储
