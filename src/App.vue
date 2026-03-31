@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref, nextTick } from "vue";
+import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useAppStore } from "@/stores/app";
 import { useNotesStore } from "@/stores/notes";
 import Toolbar from "@/components/Toolbar/index.vue";
-import MindMap from "@/components/MindMap/index.vue";
+import NoteList from "@/components/NoteList/index.vue";
 import Editor from "@/components/Editor/index.vue";
 
 const { locale, t } = useI18n();
@@ -12,11 +12,12 @@ const appStore = useAppStore();
 const notesStore = useNotesStore();
 
 const editingNoteId = ref<string | null>(null);
-const mindMapRef = ref<InstanceType<typeof MindMap> | null>(null);
+const noteListRef = ref<InstanceType<typeof NoteList> | null>(null);
 
 onMounted(async () => {
   await appStore.init();
   locale.value = appStore.locale;
+  await notesStore.init();
 });
 
 function handleEdit(noteId: string) {
@@ -29,24 +30,15 @@ function handleCloseEditor() {
 
 function handleNewNote() {
   notesStore.createNote(t("toolbar.newNote"));
-  nextTick(() => {
-    mindMapRef.value?.refresh();
-  });
 }
 
 function handleAddChild(parentId: string) {
   notesStore.createNote(t("toolbar.newNote"), parentId);
-  nextTick(() => {
-    mindMapRef.value?.refresh();
-  });
 }
 
 function handleDelete(noteId: string) {
   notesStore.deleteNote(noteId);
   editingNoteId.value = null;
-  nextTick(() => {
-    mindMapRef.value?.refresh();
-  });
 }
 </script>
 
@@ -64,9 +56,14 @@ function handleDelete(noteId: string) {
         <div class="ambient-blob blob-3"></div>
       </div>
 
-      <!-- 画布容器 -->
-      <div class="canvas-wrapper">
-        <MindMap ref="mindMapRef" @edit="handleEdit" />
+      <!-- 笔记列表容器 -->
+      <div class="content-wrapper">
+        <NoteList
+          ref="noteListRef"
+          @edit="handleEdit"
+          @add-child="handleAddChild"
+          @delete="handleDelete"
+        />
       </div>
 
       <!-- 新建按钮 -->
@@ -171,25 +168,27 @@ function handleDelete(noteId: string) {
   }
 }
 
-/* Canvas */
-.canvas-wrapper {
+/* Content Wrapper */
+.content-wrapper {
   position: relative;
   z-index: 1;
   flex: 1;
-  margin: 20px;
-  border-radius: 20px;
-  overflow: hidden;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.04),
-    0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+  overflow-y: auto;
+  padding: 20px 0;
 }
 
-.dark .canvas-wrapper {
-  box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.25),
-    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+@media (max-width: 640px) {
+  .content-wrapper {
+    padding: 12px 0;
+  }
+
+  .fab {
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+  }
 }
 
 /* FAB */
@@ -228,20 +227,5 @@ function handleDelete(noteId: string) {
 
 .fab:active {
   transform: translateY(-2px) scale(1.02);
-}
-
-@media (max-width: 640px) {
-  .canvas-wrapper {
-    margin: 12px;
-    border-radius: 16px;
-  }
-
-  .fab {
-    bottom: 20px;
-    right: 20px;
-    width: 56px;
-    height: 56px;
-    border-radius: 18px;
-  }
 }
 </style>

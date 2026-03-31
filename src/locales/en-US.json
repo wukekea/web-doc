@@ -24,8 +24,11 @@
     "placeholder": "Enter your note content here...",
     "cancel": "Cancel"
   },
-  "mindmap": {
+  "noteList": {
     "empty": "Click the button below to create your first note",
-    "doubleClickToEdit": "Double-click node to edit"
+    "doubleClickToEdit": "Double-click to edit note",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "children": "child nodes"
   }
 }

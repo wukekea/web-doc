@@ -10,7 +10,8 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
   },
   "dependencies": {
-    "@antv/x6": "^3.1.7",
+    "dompurify": "^3.3.3",
+    "marked": "^17.0.5",
     "pinia": "^3.0.4",
     "tslib": "^2.8.1",
     "uuid": "^13.0.0",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.2",
+    "@types/dompurify": "^3.0.5",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-vue": "^5.0.4",
     "autoprefixer": "^10.4.27",

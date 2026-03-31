@@ -24,8 +24,11 @@
     "placeholder": "在这里输入笔记内容...",
     "cancel": "取消"
   },
-  "mindmap": {
+  "noteList": {
     "empty": "点击右下角按钮创建第一个笔记",
-    "doubleClickToEdit": "双击节点编辑"
+    "doubleClickToEdit": "双击编辑笔记",
+    "expand": "展开",
+    "collapse": "折叠",
+    "children": "个子节点"
   }
 }
