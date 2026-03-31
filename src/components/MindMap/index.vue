@@ -18,11 +18,15 @@ const appStore = useAppStore();
 // 定义事件
 const emit = defineEmits<{
   (e: "edit", noteId: string): void;
-  (e: "add", parentId?: string): void;
+  (e: "add-child", parentId: string): void;
+  (e: "delete", noteId: string): void;
 }>();
 
 // 节点位置映射
 const nodePositions = new Map<string, { x: number; y: number }>();
+
+// 选中的节点 ID
+const selectedNodeId = ref<string | null>(null);
 
 // 计算节点位置（树形布局）
 function calculatePositions(rootIds: string[], notes: Map<string, NoteNode>) {
@@ -175,17 +179,21 @@ function initGraph() {
 
   // 点击空白区域 - 取消选中
   graph.on("blank:click", () => {
+    selectedNodeId.value = null;
     graph.getCells().forEach((cell) => {
       if (cell.isNode()) {
         cell.attr("body/strokeWidth", 1);
+        updateNodeTheme(cell, appStore.theme === "dark");
       }
     });
   });
 
   // 点击节点 - 选中效果
   graph.on("node:click", ({ node }) => {
+    selectedNodeId.value = node.id;
     graph.getNodes().forEach((n) => {
       n.attr("body/strokeWidth", 1);
+      updateNodeTheme(n, appStore.theme === "dark");
     });
     node.attr("body/strokeWidth", 3);
     node.attr("body/stroke", "#3b82f6");
@@ -222,7 +230,9 @@ watch(
 
     // 更新节点主题
     graph.getNodes().forEach((node) => {
-      updateNodeTheme(node, newTheme === "dark");
+      if (node.id !== selectedNodeId.value) {
+        updateNodeTheme(node, newTheme === "dark");
+      }
     });
 
     // 更新边的颜色
@@ -232,13 +242,20 @@ watch(
   },
 );
 
-// 监听数据变化
+// 监听数据变化 - 使用 notes 数量变化而非深度监听
 watch(
-  () => [notesStore.notes, notesStore.rootIds],
+  () => notesStore.notes.size,
   () => {
     nextTick(renderGraph);
   },
-  { deep: true },
+);
+
+// 监听 rootIds 变化
+watch(
+  () => [...notesStore.rootIds],
+  () => {
+    nextTick(renderGraph);
+  },
 );
 
 onMounted(async () => {
@@ -256,12 +273,15 @@ onUnmounted(() => {
 // 暴露方法
 defineExpose({
   refresh: renderGraph,
+  selectedNodeId,
 });
 </script>
 
 <template>
-  <div
-    ref="containerRef"
-    class="h-full w-full rounded-xl bg-[var(--bg-secondary)]"
-  />
+  <div class="relative h-full w-full">
+    <div
+      ref="containerRef"
+      class="h-full w-full rounded-xl bg-[var(--bg-secondary)]"
+    />
+  </div>
 </template>

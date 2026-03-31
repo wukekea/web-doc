@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, nextTick } from "vue";
 import { useI18n } from "vue-i18n";
 import { useAppStore } from "@/stores/app";
 import { useNotesStore } from "@/stores/notes";
@@ -32,10 +32,26 @@ function handleCloseEditor() {
 // 新建根节点
 function handleNewNote() {
   notesStore.createNote(t("toolbar.newNote"));
-  // 刷新思维导图
-  setTimeout(() => {
+  nextTick(() => {
     mindMapRef.value?.refresh();
-  }, 100);
+  });
+}
+
+// 添加子节点
+function handleAddChild(parentId: string) {
+  notesStore.createNote(t("toolbar.newNote"), parentId);
+  nextTick(() => {
+    mindMapRef.value?.refresh();
+  });
+}
+
+// 删除节点
+function handleDelete(noteId: string) {
+  notesStore.deleteNote(noteId);
+  editingNoteId.value = null;
+  nextTick(() => {
+    mindMapRef.value?.refresh();
+  });
 }
 </script>
 
@@ -85,7 +101,12 @@ function handleNewNote() {
     </main>
 
     <!-- 编辑器侧边栏 -->
-    <Editor :note-id="editingNoteId" @close="handleCloseEditor" />
+    <Editor
+      :note-id="editingNoteId"
+      @close="handleCloseEditor"
+      @add-child="handleAddChild"
+      @delete="handleDelete"
+    />
   </div>
 </template>
 
