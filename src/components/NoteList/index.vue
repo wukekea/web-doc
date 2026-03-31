@@ -125,8 +125,8 @@ const allNotes = computed(() => notesStore.getAllNotes());
 }
 
 .note-cards {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
 }
 
@@ -134,10 +134,14 @@ const allNotes = computed(() => notesStore.getAllNotes());
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  padding: 20px;
+  padding: 16px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  min-height: 180px;
+  max-height: 180px;
 }
 
 .note-card:hover {
@@ -150,17 +154,23 @@ const allNotes = computed(() => notesStore.getAllNotes());
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 12px;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
 .note-title {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
   line-height: 1.4;
   flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .note-actions {
@@ -170,14 +180,14 @@ const allNotes = computed(() => notesStore.getAllNotes());
 }
 
 .action-btn {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
   background: var(--bg-secondary);
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
   color: var(--text-secondary);
@@ -194,33 +204,69 @@ const allNotes = computed(() => notesStore.getAllNotes());
 }
 
 .action-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 .note-preview {
-  margin-bottom: 12px;
+  flex: 1;
+  overflow: hidden;
   color: var(--text-secondary);
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  position: relative;
 }
 
 .note-preview :deep(.markdown-renderer) {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
 }
 
 .note-preview :deep(h1),
 .note-preview :deep(h2),
 .note-preview :deep(h3) {
-  font-size: 1rem;
-  margin-top: 0.75em;
+  font-size: 0.9375rem;
+  margin-top: 0.5em;
+  margin-bottom: 0.25em;
+}
+
+.note-preview :deep(p),
+.note-preview :deep(ul),
+.note-preview :deep(ol) {
+  margin-bottom: 0.5em;
+}
+
+.note-preview :deep(p:last-child),
+.note-preview :deep(ul:last-child),
+.note-preview :deep(ol:last-child) {
+  margin-bottom: 0;
+}
+
+/* 内容溢出时显示省略号 */
+.note-preview::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2em;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--bg-primary) 30%,
+    var(--bg-primary) 100%
+  );
+  pointer-events: none;
 }
 
 .note-meta {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 0.8125rem;
+  gap: 8px;
+  font-size: 0.75rem;
   color: var(--text-tertiary);
+  margin-top: 8px;
+  flex-shrink: 0;
 }
 
 .meta-date {
@@ -257,12 +303,13 @@ const allNotes = computed(() => notesStore.getAllNotes());
     padding: 12px;
   }
 
-  .note-card {
-    padding: 16px;
+  .note-cards {
+    grid-template-columns: 1fr;
   }
 
-  .note-title {
-    font-size: 1rem;
+  .note-card {
+    min-height: 160px;
+    max-height: 160px;
   }
 }
 </style>
