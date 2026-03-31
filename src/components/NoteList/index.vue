@@ -134,7 +134,7 @@ const allNotes = computed(() => notesStore.getAllNotes());
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  padding: 16px;
+  padding: 0;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: var(--shadow-soft);
@@ -142,6 +142,7 @@ const allNotes = computed(() => notesStore.getAllNotes());
   flex-direction: column;
   min-height: 180px;
   max-height: 180px;
+  overflow: hidden;
 }
 
 .note-card:hover {
@@ -155,8 +156,10 @@ const allNotes = computed(() => notesStore.getAllNotes());
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 10px;
+  padding: 14px 16px 10px 16px;
+  background: var(--bg-secondary);
   flex-shrink: 0;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .note-title {
@@ -168,9 +171,7 @@ const allNotes = computed(() => notesStore.getAllNotes());
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
 }
 
 .note-actions {
@@ -186,7 +187,7 @@ const allNotes = computed(() => notesStore.getAllNotes());
   align-items: center;
   justify-content: center;
   border: none;
-  background: var(--bg-secondary);
+  background: var(--bg-tertiary);
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -214,7 +215,9 @@ const allNotes = computed(() => notesStore.getAllNotes());
   color: var(--text-secondary);
   font-size: 0.875rem;
   line-height: 1.6;
+  padding: 12px 16px;
   position: relative;
+  min-height: 0;
 }
 
 .note-preview :deep(.markdown-renderer) {
@@ -233,7 +236,7 @@ const allNotes = computed(() => notesStore.getAllNotes());
 .note-preview :deep(p),
 .note-preview :deep(ul),
 .note-preview :deep(ol) {
-  margin-bottom: 0.5em;
+  margin-bottom: 0.4em;
 }
 
 .note-preview :deep(p:last-child),
@@ -242,18 +245,18 @@ const allNotes = computed(() => notesStore.getAllNotes());
   margin-bottom: 0;
 }
 
-/* 内容溢出时显示省略号 */
+/* 内容溢出时显示省略效果 */
 .note-preview::after {
   content: "";
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 2em;
+  height: 3em;
   background: linear-gradient(
     to bottom,
     transparent 0%,
-    var(--bg-primary) 30%,
+    transparent 60%,
     var(--bg-primary) 100%
   );
   pointer-events: none;
@@ -265,8 +268,10 @@ const allNotes = computed(() => notesStore.getAllNotes());
   gap: 8px;
   font-size: 0.75rem;
   color: var(--text-tertiary);
-  margin-top: 8px;
+  padding: 8px 16px 12px 16px;
+  background: var(--bg-secondary);
   flex-shrink: 0;
+  border-top: 1px solid var(--border-color);
 }
 
 .meta-date {
