@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useI18n } from "vue-i18n";
 import { useNotesStore } from "@/stores/notes";
 import MarkdownRenderer from "@/components/MarkdownRenderer/index.vue";
 
 const notesStore = useNotesStore();
-const { t } = useI18n();
 
 const emit = defineEmits<{
   edit: [id: string];
+  preview: [id: string];
   delete: [id: string];
 }>();
 
 // 格式化时间 YYYY-MM-DD HH:mm
 function formatDateTime(timestamp: number): string {
+  if (!timestamp) return "";
   const date = new Date(timestamp);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -40,14 +40,14 @@ const allNotes = computed(() => notesStore.getAllNotes());
         <path d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         <circle cx="12" cy="12" r="10" />
       </svg>
-      <p class="empty-text">{{ t("noteList.empty") }}</p>
+      <p class="empty-text">点击右下角按钮创建第一个笔记</p>
     </div>
     <div v-else class="note-cards">
       <div
         v-for="note in allNotes"
         :key="note.id"
         class="note-card"
-        @dblclick="emit('edit', note.id)"
+        @click="emit('preview', note.id)"
       >
         <!-- 标题和操作按钮 -->
         <div class="note-header">

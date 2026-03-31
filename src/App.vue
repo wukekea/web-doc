@@ -6,12 +6,14 @@ import { useNotesStore } from "@/stores/notes";
 import Toolbar from "@/components/Toolbar/index.vue";
 import NoteList from "@/components/NoteList/index.vue";
 import Editor from "@/components/Editor/index.vue";
+import NotePreview from "@/components/NotePreview/index.vue";
 
 const { locale, t } = useI18n();
 const appStore = useAppStore();
 const notesStore = useNotesStore();
 
 const editingNoteId = ref<string | null>(null);
+const previewNoteId = ref<string | null>(null);
 const noteListRef = ref<InstanceType<typeof NoteList> | null>(null);
 
 onMounted(async () => {
@@ -24,8 +26,16 @@ function handleEdit(noteId: string) {
   editingNoteId.value = noteId;
 }
 
+function handlePreview(noteId: string) {
+  previewNoteId.value = noteId;
+}
+
 function handleCloseEditor() {
   editingNoteId.value = null;
+}
+
+function handleClosePreview() {
+  previewNoteId.value = null;
 }
 
 function handleNewNote() {
@@ -35,6 +45,7 @@ function handleNewNote() {
 function handleDelete(noteId: string) {
   notesStore.deleteNote(noteId);
   editingNoteId.value = null;
+  previewNoteId.value = null;
 }
 </script>
 
@@ -54,7 +65,12 @@ function handleDelete(noteId: string) {
 
       <!-- 笔记列表容器 -->
       <div class="content-wrapper">
-        <NoteList ref="noteListRef" @edit="handleEdit" @delete="handleDelete" />
+        <NoteList
+          ref="noteListRef"
+          @edit="handleEdit"
+          @preview="handlePreview"
+          @delete="handleDelete"
+        />
       </div>
 
       <!-- 新建按钮 -->
@@ -75,6 +91,14 @@ function handleDelete(noteId: string) {
       :note-id="editingNoteId"
       @close="handleCloseEditor"
       @delete="handleDelete"
+    />
+
+    <!-- 预览页 -->
+    <NotePreview
+      :note-id="previewNoteId"
+      @close="handleClosePreview"
+      @delete="handleDelete"
+      @edit="handleEdit"
     />
   </div>
 </template>
