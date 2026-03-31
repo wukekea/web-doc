@@ -32,10 +32,6 @@ function handleNewNote() {
   notesStore.createNote(t("toolbar.newNote"));
 }
 
-function handleAddChild(parentId: string) {
-  notesStore.createNote(t("toolbar.newNote"), parentId);
-}
-
 function handleDelete(noteId: string) {
   notesStore.deleteNote(noteId);
   editingNoteId.value = null;
@@ -58,12 +54,7 @@ function handleDelete(noteId: string) {
 
       <!-- 笔记列表容器 -->
       <div class="content-wrapper">
-        <NoteList
-          ref="noteListRef"
-          @edit="handleEdit"
-          @add-child="handleAddChild"
-          @delete="handleDelete"
-        />
+        <NoteList ref="noteListRef" @edit="handleEdit" @delete="handleDelete" />
       </div>
 
       <!-- 新建按钮 -->
@@ -83,7 +74,6 @@ function handleDelete(noteId: string) {
     <Editor
       :note-id="editingNoteId"
       @close="handleCloseEditor"
-      @add-child="handleAddChild"
       @delete="handleDelete"
     />
   </div>

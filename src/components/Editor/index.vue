@@ -8,9 +8,8 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: "close"): void;
-  (e: "add-child", parentId: string): void;
-  (e: "delete", noteId: string): void;
+  close: [];
+  delete: [noteId: string];
 }>();
 
 const { t } = useI18n();
@@ -48,15 +47,6 @@ function handleSave() {
 
 function handleClose() {
   emit("close");
-}
-
-function handleAddChild() {
-  if (!props.noteId) return;
-  const parentId = props.noteId;
-  emit("close");
-  setTimeout(() => {
-    emit("add-child", parentId);
-  }, 100);
 }
 
 function handleDelete() {
@@ -128,20 +118,8 @@ function handleDelete() {
 
           <!-- 底部操作 -->
           <footer class="panel-footer">
-            <!-- 次要操作 -->
+            <!-- 操作 -->
             <div class="secondary-actions">
-              <button class="action-btn add-action" @click="handleAddChild">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 8v8M8 12h8" />
-                </svg>
-                <span>{{ t("toolbar.addChild") }}</span>
-              </button>
               <button class="action-btn delete-action" @click="handleDelete">
                 <svg
                   viewBox="0 0 24 24"

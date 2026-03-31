@@ -1,47 +1,46 @@
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useNotesStore } from "@/stores/notes";
-import NoteListItem from "./NoteListItem.vue";
-import type { NoteNode } from "@/types";
+import MarkdownRenderer from "@/components/MarkdownRenderer/index.vue";
 
 const notesStore = useNotesStore();
 const { t } = useI18n();
 
 const emit = defineEmits<{
   edit: [id: string];
-  addChild: [parentId: string];
   delete: [id: string];
 }>();
 
-// 展开的节点 ID
-const expandedIds = ref<Set<string>>(new Set());
+// 格式化时间
+function formatDate(timestamp: number): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-// 切换展开/折叠
-function toggleExpand(id: string) {
-  if (expandedIds.value.has(id)) {
-    expandedIds.value.delete(id);
+  if (days === 0) {
+    return "今天";
+  } else if (days === 1) {
+    return "昨天";
+  } else if (days < 7) {
+    return `${days} 天前`;
   } else {
-    expandedIds.value.add(id);
+    return date.toLocaleDateString("zh-CN", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   }
 }
 
-// 计算属性：根节点列表
-const rootNotes = computed(() => {
-  const notes: NoteNode[] = [];
-  for (const id of notesStore.rootIds) {
-    const note = notesStore.getNote(id);
-    if (note) {
-      notes.push(note);
-    }
-  }
-  return notes;
-});
+// 所有笔记（按更新时间降序）
+const allNotes = computed(() => notesStore.getAllNotes());
 </script>
 
 <template>
   <div class="note-list">
-    <div v-if="rootNotes.length === 0" class="empty-state">
+    <div v-if="allNotes.length === 0" class="empty-state">
       <svg
         viewBox="0 0 24 24"
         fill="none"
@@ -54,18 +53,65 @@ const rootNotes = computed(() => {
       </svg>
       <p class="empty-text">{{ t("noteList.empty") }}</p>
     </div>
-    <div v-else class="note-tree">
-      <NoteListItem
-        v-for="note in rootNotes"
+    <div v-else class="note-cards">
+      <div
+        v-for="note in allNotes"
         :key="note.id"
-        :note="note"
-        :level="0"
-        :expanded-ids="expandedIds"
-        @toggle="toggleExpand"
-        @edit="(id) => emit('edit', id)"
-        @add-child="(id) => emit('addChild', id)"
-        @delete="(id) => emit('delete', id)"
-      />
+        class="note-card"
+        @dblclick="emit('edit', note.id)"
+      >
+        <!-- 标题和操作按钮 -->
+        <div class="note-header">
+          <h3 class="note-title">{{ note.title || "无标题" }}</h3>
+          <div class="note-actions">
+            <button
+              class="action-btn"
+              @click.stop="emit('edit', note.id)"
+              title="编辑"
+            >
+              <svg
+                viewBox="0 0 20 20"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5"
+                />
+                <path
+                  d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
+                />
+              </svg>
+            </button>
+            <button
+              class="action-btn delete-btn"
+              @click.stop="emit('delete', note.id)"
+              title="删除"
+            >
+              <svg
+                viewBox="0 0 20 20"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <path
+                  d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 内容预览 -->
+        <div v-if="note.content" class="note-preview">
+          <MarkdownRenderer :content="note.content" />
+        </div>
+
+        <!-- 元信息 -->
+        <div class="note-meta">
+          <span class="meta-date">{{ formatDate(note.updatedAt) }}</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -78,19 +124,13 @@ const rootNotes = computed(() => {
   padding: 20px;
 }
 
-.note-tree {
+.note-cards {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.note-item {
-  position: relative;
-}
-
 .note-card {
-  display: flex;
-  align-items: flex-start;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: 16px;
@@ -104,47 +144,6 @@ const rootNotes = computed(() => {
   border-color: var(--accent-secondary);
   box-shadow: var(--shadow-medium);
   transform: translateY(-2px);
-}
-
-.note-indent {
-  display: flex;
-  align-items: flex-start;
-  padding-top: 4px;
-  min-width: 24px;
-}
-
-.expand-btn {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: var(--bg-secondary);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: var(--text-secondary);
-}
-
-.expand-btn:hover {
-  background: var(--accent-soft);
-  color: var(--accent-primary);
-}
-
-.expand-btn .icon {
-  width: 14px;
-  height: 14px;
-  transition: transform 0.2s ease;
-}
-
-.expand-btn .icon-expanded {
-  transform: rotate(90deg);
-}
-
-.note-content {
-  flex: 1;
-  min-width: 0;
 }
 
 .note-header {
@@ -161,6 +160,7 @@ const rootNotes = computed(() => {
   color: var(--text-primary);
   margin: 0;
   line-height: 1.4;
+  flex: 1;
 }
 
 .note-actions {
@@ -229,22 +229,6 @@ const rootNotes = computed(() => {
   gap: 4px;
 }
 
-.meta-children {
-  padding: 2px 8px;
-  background: var(--bg-secondary);
-  border-radius: 100px;
-}
-
-.note-children {
-  margin-top: 12px;
-  margin-left: 32px;
-  padding-left: 20px;
-  border-left: 2px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
 /* 空状态 */
 .empty-state {
   display: flex;
@@ -275,11 +259,6 @@ const rootNotes = computed(() => {
 
   .note-card {
     padding: 16px;
-  }
-
-  .note-children {
-    margin-left: 20px;
-    padding-left: 16px;
   }
 
   .note-title {

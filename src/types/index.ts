@@ -1,12 +1,10 @@
 /**
- * 笔记节点类型定义
+ * 笔记类型定义
  */
-export interface NoteNode {
+export interface Note {
   id: string;
   title: string;
   content: string; // Markdown 内容
-  children: string[]; // 子节点 ID 列表
-  parentId?: string; // 父节点 ID
   createdAt: number;
   updatedAt: number;
 }
