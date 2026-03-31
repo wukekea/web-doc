@@ -21,7 +21,7 @@
     "title": "编辑笔记",
     "titleLabel": "标题",
     "content": "内容",
-    "placeholder": "请输入内容...",
+    "placeholder": "在这里输入笔记内容...",
     "cancel": "取消"
   },
   "mindmap": {

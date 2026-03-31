@@ -20,7 +20,6 @@ const title = ref("");
 const content = ref("");
 const isEditing = computed(() => props.noteId !== null);
 
-// 监听 noteId 变化，加载笔记内容
 watch(
   () => props.noteId,
   (id) => {
@@ -38,7 +37,6 @@ watch(
   { immediate: true },
 );
 
-// 保存笔记
 function handleSave() {
   if (!props.noteId) return;
   notesStore.updateNote(props.noteId, {
@@ -48,18 +46,19 @@ function handleSave() {
   emit("close");
 }
 
-// 关闭编辑器
 function handleClose() {
   emit("close");
 }
 
-// 添加子节点
 function handleAddChild() {
   if (!props.noteId) return;
-  emit("add-child", props.noteId);
+  const parentId = props.noteId;
+  emit("close");
+  setTimeout(() => {
+    emit("add-child", parentId);
+  }, 100);
 }
 
-// 删除节点
 function handleDelete() {
   if (!props.noteId) return;
   emit("delete", props.noteId);
@@ -67,143 +66,431 @@ function handleDelete() {
 </script>
 
 <template>
-  <Transition name="slide">
-    <div
-      v-if="isEditing"
-      class="fixed right-0 top-0 z-50 h-full w-96 bg-[var(--bg-primary)] shadow-2xl"
-    >
-      <!-- 头部 -->
-      <div
-        class="flex items-center justify-between border-b border-[var(--bg-secondary)] px-6 py-4"
-      >
-        <h2 class="text-lg font-semibold text-[var(--text-primary)]">
-          {{ t("editor.title") }}
-        </h2>
-        <button
-          @click="handleClose"
-          class="rounded-xl p-2 text-[var(--text-secondary)] transition-all duration-300 hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
-        >
-          <svg
-            class="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-      </div>
-
-      <!-- 内容 -->
-      <div class="flex h-[calc(100%-200px)] flex-col gap-4 overflow-auto p-6">
-        <!-- 标题输入 -->
-        <div>
-          <label
-            class="mb-2 block text-sm font-medium text-[var(--text-secondary)]"
-          >
-            {{ t("editor.titleLabel") }}
-          </label>
-          <input
-            v-model="title"
-            type="text"
-            class="w-full rounded-xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)] px-4 py-3 text-[var(--text-primary)] outline-none transition-all duration-300 focus:border-[var(--accent-color)] focus:ring-2 focus:ring-[var(--accent-color)] focus:ring-opacity-20"
-            :placeholder="t('editor.titleLabel')"
-          />
-        </div>
-
-        <!-- 内容输入 -->
-        <div class="flex-1">
-          <label
-            class="mb-2 block text-sm font-medium text-[var(--text-secondary)]"
-          >
-            {{ t("editor.content") }}
-          </label>
-          <textarea
-            v-model="content"
-            class="h-full w-full resize-none rounded-xl border border-[var(--bg-secondary)] bg-[var(--bg-secondary)] px-4 py-3 text-[var(--text-primary)] outline-none transition-all duration-300 focus:border-[var(--accent-color)] focus:ring-2 focus:ring-[var(--accent-color)] focus:ring-opacity-20"
-            :placeholder="t('editor.placeholder')"
-          />
-        </div>
-      </div>
-
-      <!-- 操作按钮 -->
-      <div
-        class="absolute bottom-0 left-0 right-0 border-t border-[var(--bg-secondary)] bg-[var(--bg-primary)] px-6 py-4"
-      >
-        <!-- 添加子节点 / 删除节点 -->
-        <div class="mb-3 flex gap-3">
-          <button
-            @click="handleAddChild"
-            class="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[var(--accent-color)] px-4 py-2 text-[var(--accent-color)] transition-all duration-300 hover:bg-[var(--accent-color)] hover:text-white"
-          >
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
+  <Teleport to="body">
+    <Transition name="editor">
+      <div v-if="isEditing" class="editor-overlay" @click.self="handleClose">
+        <aside class="editor-panel">
+          <!-- 头部 -->
+          <header class="panel-header">
+            <div class="header-left">
+              <div class="header-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"
+                  />
+                  <path
+                    d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
+                  />
+                </svg>
+              </div>
+              <h2 class="header-title">{{ t("editor.title") }}</h2>
+            </div>
+            <button class="close-btn" @click="handleClose">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
                 stroke-width="2"
-                d="M12 4v16m8-8H4"
+              >
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </header>
+
+          <!-- 内容区 -->
+          <div class="panel-content">
+            <!-- 标题 -->
+            <div class="field-group">
+              <label class="field-label">{{ t("editor.titleLabel") }}</label>
+              <input
+                v-model="title"
+                type="text"
+                class="field-input"
+                :placeholder="t('editor.titleLabel')"
               />
-            </svg>
-            {{ t("toolbar.addChild") }}
-          </button>
-          <button
-            @click="handleDelete"
-            class="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-400 px-4 py-2 text-red-400 transition-all duration-300 hover:bg-red-400 hover:text-white"
-          >
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+            </div>
+
+            <!-- 内容 -->
+            <div class="field-group field-flex">
+              <label class="field-label">{{ t("editor.content") }}</label>
+              <textarea
+                v-model="content"
+                class="field-textarea"
+                :placeholder="t('editor.placeholder')"
               />
-            </svg>
-            {{ t("toolbar.delete") }}
-          </button>
-        </div>
-        <!-- 取消 / 保存 -->
-        <div class="flex gap-3">
-          <button
-            @click="handleClose"
-            class="flex-1 rounded-xl border border-[var(--bg-secondary)] px-4 py-3 text-[var(--text-secondary)] transition-all duration-300 hover:bg-[var(--bg-secondary)]"
-          >
-            {{ t("editor.cancel") }}
-          </button>
-          <button
-            @click="handleSave"
-            class="flex-1 rounded-xl bg-[var(--accent-color)] px-4 py-3 font-medium text-white transition-all duration-300 hover:opacity-90"
-          >
-            {{ t("toolbar.save") }}
-          </button>
-        </div>
+            </div>
+          </div>
+
+          <!-- 底部操作 -->
+          <footer class="panel-footer">
+            <!-- 次要操作 -->
+            <div class="secondary-actions">
+              <button class="action-btn add-action" @click="handleAddChild">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 8v8M8 12h8" />
+                </svg>
+                <span>{{ t("toolbar.addChild") }}</span>
+              </button>
+              <button class="action-btn delete-action" @click="handleDelete">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"
+                  />
+                </svg>
+                <span>{{ t("toolbar.delete") }}</span>
+              </button>
+            </div>
+
+            <!-- 主要操作 -->
+            <div class="primary-actions">
+              <button class="btn-cancel" @click="handleClose">
+                {{ t("editor.cancel") }}
+              </button>
+              <button class="btn-save" @click="handleSave">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                >
+                  <path d="M5 13l4 4L19 7" />
+                </svg>
+                {{ t("toolbar.save") }}
+              </button>
+            </div>
+          </footer>
+        </aside>
       </div>
-    </div>
-  </Transition>
+    </Transition>
+  </Teleport>
 </template>
 
 <style scoped>
-.slide-enter-active,
-.slide-leave-active {
-  transition: transform 0.3s ease;
+.editor-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
-.slide-enter-from,
-.slide-leave-to {
+.editor-panel {
+  width: 440px;
+  max-width: 100vw;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-left: 1px solid var(--glass-border);
+  box-shadow:
+    -20px 0 60px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+}
+
+/* Header */
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 28px;
+  border-bottom: 1px solid var(--border-color);
+  background: linear-gradient(180deg, var(--bg-secondary) 0%, transparent 100%);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  border-radius: 14px;
+  color: white;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+}
+
+.header-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.close-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--text-tertiary);
+}
+
+.close-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Content */
+.panel-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 28px;
+  gap: 24px;
+  overflow-y: auto;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field-flex {
+  flex: 1;
+  min-height: 0;
+}
+
+.field-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+}
+
+.field-input {
+  padding: 16px 18px;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.field-input::placeholder {
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  background: var(--bg-primary);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+.field-textarea {
+  flex: 1;
+  min-height: 240px;
+  padding: 16px 18px;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 14px;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+  resize: none;
+  font-family: inherit;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.field-textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+.field-textarea:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  background: var(--bg-primary);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+/* Footer */
+.panel-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px 28px;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.secondary-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.action-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.add-action {
+  background: transparent;
+  border: 2px solid var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.add-action:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent-secondary);
+  transform: translateY(-1px);
+}
+
+.delete-action {
+  background: transparent;
+  border: 2px solid var(--danger);
+  color: var(--danger);
+}
+
+.delete-action:hover {
+  background: var(--danger-soft);
+  transform: translateY(-1px);
+}
+
+.primary-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-cancel,
+.btn-save {
+  flex: 1;
+  padding: 16px 24px;
+  border-radius: 14px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-cancel {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.btn-cancel:hover {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.btn-save {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border: none;
+  color: white;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.35);
+}
+
+.btn-save svg {
+  width: 20px;
+  height: 20px;
+}
+
+.btn-save:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.45);
+}
+
+.btn-save:active {
+  transform: translateY(0);
+}
+
+/* Transitions */
+.editor-enter-active,
+.editor-leave-active {
+  transition: opacity 0.35s ease;
+}
+
+.editor-enter-active .editor-panel,
+.editor-leave-active .editor-panel {
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.editor-enter-from,
+.editor-leave-to {
+  opacity: 0;
+}
+
+.editor-enter-from .editor-panel,
+.editor-leave-to .editor-panel {
   transform: translateX(100%);
+}
+
+@media (max-width: 480px) {
+  .editor-panel {
+    width: 100%;
+  }
+
+  .panel-header,
+  .panel-content,
+  .panel-footer {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
 }
 </style>

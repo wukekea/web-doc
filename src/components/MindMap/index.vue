@@ -18,8 +18,6 @@ const appStore = useAppStore();
 // 定义事件
 const emit = defineEmits<{
   (e: "edit", noteId: string): void;
-  (e: "add-child", parentId: string): void;
-  (e: "delete", noteId: string): void;
 }>();
 
 // 节点位置映射
@@ -41,16 +39,16 @@ function calculatePositions(rootIds: string[], notes: Map<string, NoteNode>) {
     // 子节点垂直排列
     let childY = y;
     note.children.forEach((childId) => {
-      layoutNode(childId, x + 280, childY, level + 1);
-      childY += 140; // 每个子节点间隔
+      layoutNode(childId, x + 300, childY, level + 1);
+      childY += 150; // 每个子节点间隔
     });
   }
 
   // 根节点水平居中开始
-  let startY = 100;
+  let startY = 120;
   rootIds.forEach((rootId) => {
-    layoutNode(rootId, 100, startY, 0);
-    startY += 200; // 多个根节点的间隔
+    layoutNode(rootId, 80, startY, 0);
+    startY += 220; // 多个根节点的间隔
   });
 }
 
@@ -58,8 +56,8 @@ function calculatePositions(rootIds: string[], notes: Map<string, NoteNode>) {
 function createNode(note: NoteNode) {
   const position = nodePositions.get(note.id) || { x: 100, y: 100 };
   const contentPreview = note.content
-    ? note.content.slice(0, 40) + (note.content.length > 40 ? "..." : "")
-    : "点击编辑内容...";
+    ? note.content.slice(0, 35) + (note.content.length > 35 ? "..." : "")
+    : "双击编辑内容...";
 
   return {
     id: note.id,
@@ -85,7 +83,7 @@ function createEdges(notes: Map<string, NoteNode>) {
         target: note.id,
         attrs: {
           line: {
-            stroke: appStore.theme === "dark" ? "#4b5563" : "#d1d5db",
+            stroke: appStore.theme === "dark" ? "#4b5563" : "#c7d2db",
             strokeWidth: 2,
             targetMarker: null,
           },
@@ -93,13 +91,13 @@ function createEdges(notes: Map<string, NoteNode>) {
         router: {
           name: "manhattan",
           args: {
-            padding: 20,
+            padding: 25,
           },
         },
         connector: {
           name: "rounded",
           args: {
-            radius: 8,
+            radius: 12,
           },
         },
       });
@@ -116,14 +114,14 @@ function renderGraph() {
   graph.clearCells();
   calculatePositions(notesStore.rootIds, notesStore.notes);
 
+  // 创建边（先于节点，这样节点在上层）
+  createEdges(notesStore.notes).forEach((edge) => {
+    graph.addEdge(edge);
+  });
+
   // 创建节点
   notesStore.notes.forEach((note) => {
     graph.addNode(createNode(note));
-  });
-
-  // 创建边
-  createEdges(notesStore.notes).forEach((edge) => {
-    graph.addEdge(edge);
   });
 
   // 应用主题
@@ -146,9 +144,9 @@ function initGraph() {
     grid: {
       visible: true,
       type: "dot",
-      size: 20,
+      size: 24,
       args: {
-        color: appStore.theme === "dark" ? "#374151" : "#e5e7eb",
+        color: appStore.theme === "dark" ? "#2a3038" : "#e8ecf0",
         thickness: 1,
       },
     },
@@ -195,8 +193,8 @@ function initGraph() {
       n.attr("body/strokeWidth", 1);
       updateNodeTheme(n, appStore.theme === "dark");
     });
-    node.attr("body/strokeWidth", 3);
-    node.attr("body/stroke", "#3b82f6");
+    node.attr("body/strokeWidth", 2);
+    node.attr("body/stroke", appStore.theme === "dark" ? "#60a5fa" : "#2563eb");
   });
 
   return graph;
@@ -223,7 +221,7 @@ watch(
     graph.drawGrid({
       type: "dot",
       args: {
-        color: newTheme === "dark" ? "#374151" : "#e5e7eb",
+        color: newTheme === "dark" ? "#2a3038" : "#e8ecf0",
         thickness: 1,
       },
     });
@@ -237,12 +235,12 @@ watch(
 
     // 更新边的颜色
     graph.getEdges().forEach((edge) => {
-      edge.attr("line/stroke", newTheme === "dark" ? "#4b5563" : "#d1d5db");
+      edge.attr("line/stroke", newTheme === "dark" ? "#4b5563" : "#c7d2db");
     });
   },
 );
 
-// 监听数据变化 - 使用 notes 数量变化而非深度监听
+// 监听数据变化
 watch(
   () => notesStore.notes.size,
   () => {
@@ -250,7 +248,6 @@ watch(
   },
 );
 
-// 监听 rootIds 变化
 watch(
   () => [...notesStore.rootIds],
   () => {
@@ -278,10 +275,20 @@ defineExpose({
 </script>
 
 <template>
-  <div class="relative h-full w-full">
-    <div
-      ref="containerRef"
-      class="h-full w-full rounded-xl bg-[var(--bg-secondary)]"
-    />
+  <div class="mindmap-wrapper">
+    <div ref="containerRef" class="mindmap-canvas" />
   </div>
 </template>
+
+<style scoped>
+.mindmap-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.mindmap-canvas {
+  width: 100%;
+  height: 100%;
+}
+</style>

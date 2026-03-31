@@ -2,13 +2,13 @@ import { Graph } from "@antv/x6";
 
 /**
  * 注册自定义笔记节点
- * 包含标题区域和内容预览区域
+ * 软润卡片风格，带标题栏和内容预览
  */
 export function registerNoteNode() {
   Graph.registerNode("note-node", {
     inherit: "rect",
-    width: 220,
-    height: 100,
+    width: 240,
+    height: 110,
     markup: [
       {
         tagName: "rect",
@@ -20,15 +20,15 @@ export function registerNoteNode() {
       },
       {
         tagName: "text",
+        selector: "icon",
+      },
+      {
+        tagName: "text",
         selector: "title",
       },
       {
         tagName: "text",
         selector: "content",
-      },
-      {
-        tagName: "text",
-        selector: "icon",
       },
     ],
     attrs: {
@@ -36,32 +36,51 @@ export function registerNoteNode() {
         refWidth: "100%",
         refHeight: "100%",
         fill: "#ffffff",
-        stroke: "#e5e7eb",
+        stroke: "#e5e8eb",
         strokeWidth: 1,
-        rx: 12,
-        ry: 12,
+        rx: 16,
+        ry: 16,
         filter: {
           name: "dropShadow",
           args: {
             dx: 0,
             dy: 4,
-            blur: 12,
-            color: "rgba(0,0,0,0.1)",
+            blur: 16,
+            color: "rgba(0,0,0,0.08)",
           },
         },
       },
       header: {
         refWidth: "100%",
-        height: 36,
-        fill: "#3b82f6",
-        rx: 12,
-        ry: 12,
+        height: 40,
+        fill: "#2563eb",
+        rx: 16,
+        ry: 16,
         refX: 0,
         refY: 0,
       },
+      // Cover bottom corners of header
+      headerBottom: {
+        refWidth: "100%",
+        height: 16,
+        fill: "#2563eb",
+        refX: 0,
+        refY: 24,
+      },
+      icon: {
+        ref: "header",
+        refX: 18,
+        refY: 0.5,
+        textAnchor: "start",
+        textVerticalAnchor: "middle",
+        fill: "#ffffff",
+        fontSize: 15,
+        text: "📝",
+        fontFamily: "Apple Color Emoji, Segoe UI Emoji, sans-serif",
+      },
       title: {
         ref: "header",
-        refX: 40,
+        refX: 42,
         refY: 0.5,
         textAnchor: "start",
         textVerticalAnchor: "middle",
@@ -69,26 +88,25 @@ export function registerNoteNode() {
         fontSize: 14,
         fontWeight: "600",
         fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      },
-      icon: {
-        ref: "header",
-        refX: 16,
-        refY: 0.5,
-        textAnchor: "middle",
-        textVerticalAnchor: "middle",
-        fill: "#ffffff",
-        fontSize: 16,
-        text: "📝",
+          '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
+        textOverflow: "ellipsis",
+        textWrap: {
+          width: 180,
+        },
       },
       content: {
-        refX: 16,
-        refY: 56,
+        refX: 18,
+        refY: 60,
         textAnchor: "start",
         fill: "#6b7280",
         fontSize: 12,
         fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
+        textOverflow: "ellipsis",
+        textWrap: {
+          width: 204,
+          height: 40,
+        },
       },
     },
   });
@@ -99,11 +117,11 @@ export function registerNoteNode() {
  */
 export const darkTheme = {
   body: {
-    fill: "#374151",
-    stroke: "#4b5563",
+    fill: "#1e2530",
+    stroke: "#2d3748",
   },
   header: {
-    fill: "#2563eb",
+    fill: "#3b82f6",
   },
   content: {
     fill: "#9ca3af",
@@ -116,10 +134,10 @@ export const darkTheme = {
 export const lightTheme = {
   body: {
     fill: "#ffffff",
-    stroke: "#e5e7eb",
+    stroke: "#e5e8eb",
   },
   header: {
-    fill: "#3b82f6",
+    fill: "#2563eb",
   },
   content: {
     fill: "#6b7280",

@@ -21,11 +21,11 @@
     "title": "Edit Note",
     "titleLabel": "Title",
     "content": "Content",
-    "placeholder": "Enter content...",
+    "placeholder": "Enter your note content here...",
     "cancel": "Cancel"
   },
   "mindmap": {
-    "empty": "Click the button in the bottom right to create your first note",
+    "empty": "Click the button below to create your first note",
     "doubleClickToEdit": "Double-click node to edit"
   }
 }

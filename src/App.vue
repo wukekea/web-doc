@@ -19,17 +19,14 @@ onMounted(async () => {
   locale.value = appStore.locale;
 });
 
-// 打开编辑器
 function handleEdit(noteId: string) {
   editingNoteId.value = noteId;
 }
 
-// 关闭编辑器
 function handleCloseEditor() {
   editingNoteId.value = null;
 }
 
-// 新建根节点
 function handleNewNote() {
   notesStore.createNote(t("toolbar.newNote"));
   nextTick(() => {
@@ -37,7 +34,6 @@ function handleNewNote() {
   });
 }
 
-// 添加子节点
 function handleAddChild(parentId: string) {
   notesStore.createNote(t("toolbar.newNote"), parentId);
   nextTick(() => {
@@ -45,7 +41,6 @@ function handleAddChild(parentId: string) {
   });
 }
 
-// 删除节点
 function handleDelete(noteId: string) {
   notesStore.deleteNote(noteId);
   editingNoteId.value = null;
@@ -56,51 +51,38 @@ function handleDelete(noteId: string) {
 </script>
 
 <template>
-  <div
-    class="flex h-screen flex-col bg-[var(--bg-primary)] text-[var(--text-primary)]"
-  >
-    <!-- 顶部工具栏 -->
+  <div class="app-shell">
+    <!-- 工具栏 -->
     <Toolbar />
 
-    <!-- 主内容区域 -->
-    <main class="relative flex-1 overflow-hidden">
-      <!-- 思维导图 -->
-      <div class="h-full p-6">
+    <!-- 主内容 -->
+    <main class="main-area">
+      <!-- 装饰背景 -->
+      <div class="ambient-bg">
+        <div class="ambient-blob blob-1"></div>
+        <div class="ambient-blob blob-2"></div>
+        <div class="ambient-blob blob-3"></div>
+      </div>
+
+      <!-- 画布容器 -->
+      <div class="canvas-wrapper">
         <MindMap ref="mindMapRef" @edit="handleEdit" />
       </div>
 
-      <!-- 浮动新建按钮 -->
-      <button
-        @click="handleNewNote"
-        class="fixed bottom-8 right-8 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent-color)] text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl"
-        :title="t('toolbar.newNote')"
-      >
+      <!-- 新建按钮 -->
+      <button class="fab" @click="handleNewNote" :title="t('toolbar.newNote')">
         <svg
-          class="h-6 w-6"
-          fill="none"
           viewBox="0 0 24 24"
+          fill="none"
           stroke="currentColor"
+          stroke-width="2.5"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 4v16m8-8H4"
-          />
+          <path d="M12 5v14M5 12h14" />
         </svg>
       </button>
-
-      <!-- 遮罩层 -->
-      <Transition name="fade">
-        <div
-          v-if="editingNoteId"
-          class="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
-          @click="handleCloseEditor"
-        />
-      </Transition>
     </main>
 
-    <!-- 编辑器侧边栏 -->
+    <!-- 编辑器 -->
     <Editor
       :note-id="editingNoteId"
       @close="handleCloseEditor"
@@ -111,13 +93,155 @@ function handleDelete(noteId: string) {
 </template>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow: hidden;
 }
 
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
+.main-area {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Ambient Background */
+.ambient-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambient-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.12;
+  animation: float 20s ease-in-out infinite;
+}
+
+.blob-1 {
+  width: 500px;
+  height: 500px;
+  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+  top: -15%;
+  right: -5%;
+  animation-delay: 0s;
+}
+
+.blob-2 {
+  width: 400px;
+  height: 400px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+  bottom: -10%;
+  left: -5%;
+  animation-delay: -7s;
+}
+
+.blob-3 {
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%);
+  top: 40%;
+  left: 30%;
+  animation-delay: -14s;
+}
+
+.dark .ambient-blob {
+  opacity: 0.06;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -30px) scale(1.05);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.95);
+  }
+}
+
+/* Canvas */
+.canvas-wrapper {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  margin: 20px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+}
+
+.dark .canvas-wrapper {
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+}
+
+/* FAB */
+.fab {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 100;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  border: none;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  cursor: pointer;
+  box-shadow:
+    0 8px 32px rgba(59, 130, 246, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fab svg {
+  width: 28px;
+  height: 28px;
+}
+
+.fab:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow:
+    0 12px 40px rgba(59, 130, 246, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+}
+
+.fab:active {
+  transform: translateY(-2px) scale(1.02);
+}
+
+@media (max-width: 640px) {
+  .canvas-wrapper {
+    margin: 12px;
+    border-radius: 16px;
+  }
+
+  .fab {
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+  }
 }
 </style>
