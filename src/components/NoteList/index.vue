@@ -12,26 +12,15 @@ const emit = defineEmits<{
   delete: [id: string];
 }>();
 
-// 格式化时间
-function formatDate(timestamp: number): string {
+// 格式化时间 YYYY-MM-DD HH:mm
+function formatDateTime(timestamp: number): string {
   const date = new Date(timestamp);
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-  if (days === 0) {
-    return "今天";
-  } else if (days === 1) {
-    return "昨天";
-  } else if (days < 7) {
-    return `${days} 天前`;
-  } else {
-    return date.toLocaleDateString("zh-CN", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
 // 所有笔记（按更新时间降序）
@@ -109,7 +98,35 @@ const allNotes = computed(() => notesStore.getAllNotes());
 
         <!-- 元信息 -->
         <div class="note-meta">
-          <span class="meta-date">{{ formatDate(note.updatedAt) }}</span>
+          <div class="meta-time">
+            <svg
+              class="time-icon"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <circle cx="8" cy="8" r="6" />
+              <path d="M8 4v4M8 8h3" />
+            </svg>
+            <span class="time-text"
+              >创建：{{ formatDateTime(note.createdAt) }}</span
+            >
+          </div>
+          <div class="meta-time">
+            <svg
+              class="time-icon"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path d="M4 4h8M12 4v8M12 8h-3" />
+            </svg>
+            <span class="time-text"
+              >更新：{{ formatDateTime(note.updatedAt) }}</span
+            >
+          </div>
         </div>
       </div>
     </div>
@@ -156,14 +173,14 @@ const allNotes = computed(() => notesStore.getAllNotes());
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 16px 10px 16px;
+  padding: 12px 16px;
   background: var(--bg-secondary);
   flex-shrink: 0;
   border-bottom: 1px solid var(--border-color);
 }
 
 .note-title {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
@@ -181,13 +198,13 @@ const allNotes = computed(() => notesStore.getAllNotes());
 }
 
 .action-btn {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
-  background: var(--bg-tertiary);
+  background: transparent;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -205,15 +222,15 @@ const allNotes = computed(() => notesStore.getAllNotes());
 }
 
 .action-btn svg {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
 }
 
 .note-preview {
   flex: 1;
   overflow: hidden;
   color: var(--text-secondary);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   line-height: 1.6;
   padding: 12px 16px;
   position: relative;
@@ -221,22 +238,22 @@ const allNotes = computed(() => notesStore.getAllNotes());
 }
 
 .note-preview :deep(.markdown-renderer) {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   line-height: 1.6;
 }
 
 .note-preview :deep(h1),
 .note-preview :deep(h2),
 .note-preview :deep(h3) {
-  font-size: 0.9375rem;
-  margin-top: 0.5em;
-  margin-bottom: 0.25em;
+  font-size: 0.875rem;
+  margin-top: 0.4em;
+  margin-bottom: 0.2em;
 }
 
 .note-preview :deep(p),
 .note-preview :deep(ul),
 .note-preview :deep(ol) {
-  margin-bottom: 0.4em;
+  margin-bottom: 0.3em;
 }
 
 .note-preview :deep(p:last-child),
@@ -252,11 +269,11 @@ const allNotes = computed(() => notesStore.getAllNotes());
   bottom: 0;
   left: 0;
   right: 0;
-  height: 3em;
+  height: 2.5em;
   background: linear-gradient(
     to bottom,
     transparent 0%,
-    transparent 60%,
+    transparent 50%,
     var(--bg-primary) 100%
   );
   pointer-events: none;
@@ -265,19 +282,31 @@ const allNotes = computed(() => notesStore.getAllNotes());
 .note-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.75rem;
-  color: var(--text-tertiary);
-  padding: 8px 16px 12px 16px;
-  background: var(--bg-secondary);
+  gap: 16px;
+  padding: 8px 16px 10px 16px;
+  background: var(--bg-primary);
   flex-shrink: 0;
   border-top: 1px solid var(--border-color);
 }
 
-.meta-date {
+.meta-time {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
+}
+
+.time-icon {
+  width: 11px;
+  height: 11px;
+  opacity: 0.7;
+}
+
+.time-text {
+  font-family:
+    ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, monospace;
+  letter-spacing: 0.02em;
 }
 
 /* 空状态 */
@@ -313,8 +342,14 @@ const allNotes = computed(() => notesStore.getAllNotes());
   }
 
   .note-card {
-    min-height: 160px;
-    max-height: 160px;
+    min-height: 180px;
+    max-height: 180px;
+  }
+
+  .note-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
   }
 }
 </style>
