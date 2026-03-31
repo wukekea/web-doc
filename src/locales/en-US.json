@@ -1,0 +1,23 @@
+{
+  "app": {
+    "title": "Digital Notes"
+  },
+  "toolbar": {
+    "newNote": "New Note",
+    "save": "Save",
+    "export": "Export"
+  },
+  "theme": {
+    "light": "Light Mode",
+    "dark": "Dark Mode"
+  },
+  "language": {
+    "zh": "中文",
+    "en": "English"
+  },
+  "editor": {
+    "title": "Title",
+    "content": "Content",
+    "placeholder": "Enter content..."
+  }
+}

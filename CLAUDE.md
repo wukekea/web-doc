@@ -66,6 +66,7 @@ note/
 ## 界面设计规范
 
 ### 整体风格
+
 - 风格定位：圆润柔和
 - 圆角：使用较大的圆角值（rounded-lg 或 rounded-xl）
 - 阴影：柔和的阴影效果，营造层次感
@@ -73,17 +74,20 @@ note/
 ### 颜色方案
 
 #### 日间模式（默认）
+
 - 主色调：蓝色系
 - 背景色：白色/浅灰色
 - 文字色：深灰色
 - 强调色：蓝色（用于按钮、高亮等）
 
 #### 夜间模式
+
 - 背景色：深灰/近黑色
 - 文字色：浅灰色/白色
 - 强调色：浅蓝色
 
 ### CSS 变量定义
+
 ```css
 /* 日间模式 */
 --bg-primary: #ffffff;
@@ -101,11 +105,13 @@ note/
 ```
 
 ### 间距规范
+
 - 组件内边距：p-4 到 p-6
 - 组件间距：m-4 或 gap-4
 - 容器边距：px-6 py-4
 
 ### 字体规范
+
 - 字体族：使用系统默认字体栈
 - 标题：text-lg 到 text-2xl，font-semibold
 - 正文：text-base，font-normal
@@ -113,26 +119,31 @@ note/
 ## 核心功能模块
 
 ### 1. 国际化（i18n）
+
 - 默认语言：中文
 - 支持通过按钮切换中/英文
 - 使用 Vue I18n 实现
 
 ### 2. 主题切换
+
 - 默认模式：日间模式
 - 支持通过按钮切换日间/夜间模式
 - 使用 CSS 变量实现主题切换
 
 ### 3. 思维导图展示
+
 - 使用 AntV X6 实现节点式布局
 - 支持节点的增删改查
 - 节点之间建立父子关系，形成知识树
 
 ### 4. Markdown 编辑
+
 - 双击节点打开编辑器
 - 支持标准 Markdown 语法
 - 实时预览
 
 ### 5. 数据持久化
+
 - 当前使用 LocalStorage 存储笔记数据
 - 设计存储抽象层，便于后续切换到后端数据库
 - 数据结构：
@@ -140,9 +151,9 @@ note/
   interface NoteNode {
     id: string;
     title: string;
-    content: string;      // Markdown 内容
-    children: string[];   // 子节点 ID 列表
-    parentId?: string;    // 父节点 ID
+    content: string; // Markdown 内容
+    children: string[]; // 子节点 ID 列表
+    parentId?: string; // 父节点 ID
     createdAt: number;
     updatedAt: number;
   }

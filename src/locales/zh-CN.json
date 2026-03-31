@@ -1,0 +1,23 @@
+{
+  "app": {
+    "title": "数字笔记"
+  },
+  "toolbar": {
+    "newNote": "新建笔记",
+    "save": "保存",
+    "export": "导出"
+  },
+  "theme": {
+    "light": "日间模式",
+    "dark": "夜间模式"
+  },
+  "language": {
+    "zh": "中文",
+    "en": "English"
+  },
+  "editor": {
+    "title": "标题",
+    "content": "内容",
+    "placeholder": "请输入内容..."
+  }
+}
