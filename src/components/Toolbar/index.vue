@@ -224,6 +224,8 @@ function toggleLocale() {
 .language-btn .btn-label {
   font-weight: 600;
   color: var(--accent-primary);
+  min-width: 1.75rem;
+  text-align: center;
 }
 
 /* Theme Toggle - 核心亮点设计 */
@@ -347,6 +349,8 @@ function toggleLocale() {
   font-weight: 600;
   color: var(--text-secondary);
   white-space: nowrap;
+  min-width: 4.5rem;
+  text-align: center;
   transition: color 0.2s ease;
 }
 
