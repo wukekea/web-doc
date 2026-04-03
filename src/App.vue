@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useAppStore } from "@/stores/app";
 import { useNotesStore } from "@/stores/notes";
 import Toolbar from "@/components/Toolbar/index.vue";
 import NoteList from "@/components/NoteList/index.vue";
 import Editor from "@/components/Editor/index.vue";
-import NotePreview from "@/components/NotePreview/index.vue";
+import NoteContent from "@/components/NoteContent/index.vue";
 
 const { locale, t } = useI18n();
 const appStore = useAppStore();
@@ -47,6 +47,9 @@ function handleDelete(noteId: string) {
   editingNoteId.value = null;
   previewNoteId.value = null;
 }
+
+// 当前选中的笔记 ID
+const activeNoteId = computed(() => previewNoteId);
 </script>
 
 <template>
@@ -56,6 +59,17 @@ function handleDelete(noteId: string) {
 
     <!-- 主内容 -->
     <main class="main-area">
+      <!-- 笔记列表容器 -->
+      <div class="content-wrapper" :class="{ 'has-preview': previewNoteId }">
+        <NoteList
+          ref="noteListRef"
+          :active-note-id="activeNoteId"
+          @edit="handleEdit"
+          @preview="handlePreview"
+          @delete="handleDelete"
+        />
+      </div>
+
       <!-- 装饰背景 -->
       <div class="ambient-bg">
         <div class="ambient-blob blob-1"></div>
@@ -63,15 +77,17 @@ function handleDelete(noteId: string) {
         <div class="ambient-blob blob-3"></div>
       </div>
 
-      <!-- 笔记列表容器 -->
-      <div class="content-wrapper">
-        <NoteList
-          ref="noteListRef"
-          @edit="handleEdit"
-          @preview="handlePreview"
-          @delete="handleDelete"
-        />
-      </div>
+      <!-- 笔记内容展示区 -->
+      <Transition name="slide-panel">
+        <div v-if="previewNoteId" class="content-panel">
+          <NoteContent
+            :note-id="previewNoteId"
+            @close="handleClosePreview"
+            @delete="handleDelete"
+            @edit="handleEdit"
+          />
+        </div>
+      </Transition>
 
       <!-- 新建按钮 -->
       <button class="fab" @click="handleNewNote" :title="t('toolbar.newNote')">
@@ -92,14 +108,6 @@ function handleDelete(noteId: string) {
       @close="handleCloseEditor"
       @delete="handleDelete"
     />
-
-    <!-- 预览页 -->
-    <NotePreview
-      :note-id="previewNoteId"
-      @close="handleClosePreview"
-      @delete="handleDelete"
-      @edit="handleEdit"
-    />
   </div>
 </template>
 
@@ -117,7 +125,7 @@ function handleDelete(noteId: string) {
   position: relative;
   flex: 1;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   overflow: hidden;
 }
 
@@ -185,15 +193,54 @@ function handleDelete(noteId: string) {
 /* Content Wrapper */
 .content-wrapper {
   position: relative;
+  z-index: 2;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+}
+
+.content-wrapper.has-preview {
+  display: none;
+}
+
+/* Content Panel */
+.content-panel {
+  position: relative;
   z-index: 1;
   flex: 1;
-  overflow-y: auto;
-  padding: 20px 0;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+/* Slide Panel Transition */
+.slide-panel-enter-active,
+.slide-panel-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-panel-enter-from,
+.slide-panel-leave-to {
+  opacity: 0;
+  transform: translateX(20px);
 }
 
 @media (max-width: 640px) {
   .content-wrapper {
-    padding: 12px 0;
+    width: 100%;
+    border-right: none;
+  }
+
+  .content-wrapper.has-preview {
+    display: none;
+  }
+
+  .content-panel {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    top: 64px;
   }
 
   .fab {

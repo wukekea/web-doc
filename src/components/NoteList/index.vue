@@ -5,6 +5,10 @@ import MarkdownRenderer from "@/components/MarkdownRenderer/index.vue";
 
 const notesStore = useNotesStore();
 
+const props = defineProps<{
+  activeNoteId: string | null;
+}>();
+
 const emit = defineEmits<{
   edit: [id: string];
   preview: [id: string];
