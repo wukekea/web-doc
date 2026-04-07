@@ -17,33 +17,35 @@ function toggleLocale() {
     <!-- 左侧：品牌标识 -->
     <div class="toolbar-brand">
       <div class="brand-logo">
-        <svg viewBox="0 0 32 32" fill="none">
+        <svg viewBox="0 0 40 40" fill="none">
+          <defs>
+            <linearGradient
+              id="logoGradient"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop offset="0%" stop-color="#3b82f6" />
+              <stop offset="50%" stop-color="#60a5fa" />
+              <stop offset="100%" stop-color="#8b5cf6" />
+            </linearGradient>
+          </defs>
           <rect
             x="2"
             y="2"
-            width="28"
-            height="28"
-            rx="8"
-            fill="url(#brandGradient)"
+            width="36"
+            height="36"
+            rx="10"
+            fill="url(#logoGradient)"
           />
           <path
-            d="M10 16L14 20L22 12"
+            d="M12 20L16 24L24 16"
             stroke="white"
             stroke-width="2.5"
             stroke-linecap="round"
             stroke-linejoin="round"
           />
-          <defs>
-            <linearGradient
-              id="brandGradient"
-              x1="2"
-              y2="30"
-              gradientUnits="userSpaceOnUse"
-            >
-              <stop stop-color="#3b82f6" />
-              <stop offset="1" stop-color="#8b5cf6" />
-            </linearGradient>
-          </defs>
         </svg>
       </div>
       <h1 class="brand-title">{{ t("app.title") }}</h1>
@@ -72,7 +74,7 @@ function toggleLocale() {
         <span class="btn-label">{{ locale === "zh-CN" ? "EN" : "中" }}</span>
       </button>
 
-      <!-- 主题切换 - 核心亮点 -->
+      <!-- 主题切换 -->
       <button
         class="theme-toggle"
         :class="{ 'is-dark': appStore.theme === 'dark' }"
@@ -113,8 +115,10 @@ function toggleLocale() {
   align-items: center;
   justify-content: space-between;
   padding: 16px 32px;
-  background: var(--bg-primary);
-  border-bottom: 1px solid var(--border-color);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-bottom: 1px solid var(--border-light);
   position: relative;
   z-index: 100;
 }
@@ -122,44 +126,53 @@ function toggleLocale() {
 .toolbar::before {
   content: "";
   position: absolute;
-  bottom: 0;
+  bottom: -1px;
   left: 0;
   right: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--accent-primary) 50%,
-    transparent 100%
-  );
-  opacity: 0.2;
+  height: 2px;
+  background: var(--accent-gradient);
+  opacity: 0;
+  transition: opacity var(--transition-base);
 }
 
-/* Brand */
+.toolbar:hover::before {
+  opacity: 0.3;
+}
+
+/* ========================================
+   BRAND
+   ======================================== */
 .toolbar-brand {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
 }
 
 .brand-logo {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow:
-    0 4px 12px rgba(59, 130, 246, 0.25),
-    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+  position: relative;
+}
+
+.brand-logo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    transparent 50%
+  );
+  pointer-events: none;
 }
 
 .brand-logo:hover {
-  transform: scale(1.05);
-  box-shadow:
-    0 6px 20px rgba(59, 130, 246, 0.35),
-    0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: var(--shadow-accent);
 }
 
 .brand-logo svg {
@@ -168,20 +181,39 @@ function toggleLocale() {
 }
 
 .brand-title {
-  font-size: 1.375rem;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: -0.03em;
-  background: linear-gradient(
-    135deg,
-    var(--text-primary) 0%,
-    var(--accent-primary) 100%
-  );
+  background: var(--accent-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  position: relative;
 }
 
-/* Actions */
+.brand-title::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--accent-gradient);
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: all var(--transition-base);
+}
+
+.toolbar-brand:hover .brand-title::after {
+  opacity: 0.5;
+  transform: scaleX(1);
+}
+
+/* ========================================
+   ACTIONS
+   ======================================== */
 .toolbar-actions {
   display: flex;
   align-items: center;
@@ -191,23 +223,39 @@ function toggleLocale() {
 .action-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
+  gap: 10px;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
   background: var(--bg-secondary);
   color: var(--text-secondary);
+  font-family: var(--font-body);
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.action-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--accent-soft);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.action-btn:hover::before {
+  opacity: 1;
 }
 
 .action-btn:hover {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-  border-color: var(--text-tertiary);
+  color: var(--accent-primary);
+  border-color: var(--accent-soft);
   transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .action-btn:active {
@@ -219,26 +267,30 @@ function toggleLocale() {
   height: 18px;
   stroke-linecap: round;
   stroke-linejoin: round;
+  position: relative;
+  z-index: 1;
 }
 
 .language-btn .btn-label {
   font-weight: 600;
   color: var(--accent-primary);
-  min-width: 1.75rem;
-  text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
-/* Theme Toggle - 核心亮点设计 */
+/* ========================================
+   THEME TOGGLE
+   ======================================== */
 .theme-toggle {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 16px 8px 8px;
-  border-radius: 14px;
+  gap: 14px;
+  padding: 10px 18px 10px 10px;
+  border-radius: var(--radius-lg);
   border: 2px solid var(--accent-primary);
   background: var(--bg-secondary);
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-base);
   position: relative;
   overflow: hidden;
 }
@@ -247,37 +299,34 @@ function toggleLocale() {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, var(--accent-soft) 0%, transparent 50%);
+  background: var(--accent-gradient);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--transition-base);
 }
 
 .theme-toggle:hover::before {
-  opacity: 1;
+  opacity: 0.05;
 }
 
 .theme-toggle:hover {
   border-color: var(--accent-secondary);
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
+  box-shadow: var(--shadow-accent);
+  transform: translateY(-1px);
 }
 
 .theme-toggle.is-dark {
-  background: linear-gradient(
-    135deg,
-    rgba(59, 130, 246, 0.15) 0%,
-    rgba(139, 92, 246, 0.1) 100%
-  );
+  background: var(--accent-medium);
   border-color: var(--accent-secondary);
 }
 
 .toggle-track {
   position: relative;
-  width: 52px;
-  height: 28px;
+  width: 56px;
+  height: 30px;
   background: var(--bg-tertiary);
-  border-radius: 14px;
+  border-radius: 15px;
   overflow: hidden;
-  transition: background 0.3s ease;
+  transition: background var(--transition-base);
 }
 
 .theme-toggle.is-dark .toggle-track {
@@ -290,18 +339,18 @@ function toggleLocale() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 6px;
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0 7px;
+  transition: transform var(--transition-bounce);
 }
 
 .icon-sun,
 .icon-moon {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
 }
 
 .icon-sun svg {
@@ -313,8 +362,8 @@ function toggleLocale() {
 .icon-moon svg {
   width: 14px;
   height: 14px;
-  color: rgba(255, 255, 255, 0.6);
-  transition: color 0.3s ease;
+  color: rgba(255, 255, 255, 0.7);
+  transition: color var(--transition-base);
 }
 
 .theme-toggle.is-dark .icon-moon svg {
@@ -325,47 +374,50 @@ function toggleLocale() {
   position: absolute;
   top: 3px;
   left: 3px;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   background: white;
-  border-radius: 50%;
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(0, 0, 0, 0.05);
-  transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-bounce);
   z-index: 1;
 }
 
 .theme-toggle.is-dark .toggle-thumb {
-  transform: translateX(24px);
+  transform: translateX(26px);
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.2),
-    0 0 12px rgba(254, 243, 199, 0.4);
+  box-shadow: 0 0 12px rgba(254, 243, 199, 0.4);
 }
 
 .toggle-label {
+  font-family: var(--font-body);
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--text-secondary);
   white-space: nowrap;
-  min-width: 4.5rem;
-  text-align: center;
-  transition: color 0.2s ease;
+  transition: color var(--transition-fast);
 }
 
 .theme-toggle:hover .toggle-label {
   color: var(--text-primary);
 }
 
-/* 响应式 */
+/* ========================================
+   RESPONSIVE
+   ======================================== */
 @media (max-width: 640px) {
   .toolbar {
-    padding: 12px 16px;
+    padding: 12px 20px;
+  }
+
+  .brand-logo {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
   }
 
   .brand-title {
-    font-size: 1.125rem;
+    font-size: 1.25rem;
   }
 
   .toggle-label {
@@ -373,11 +425,35 @@ function toggleLocale() {
   }
 
   .action-btn {
-    padding: 8px 12px;
+    padding: 8px 14px;
   }
 
   .btn-label {
     display: none;
+  }
+
+  .theme-toggle {
+    padding: 8px 10px;
+  }
+
+  .toggle-track {
+    width: 50px;
+    height: 26px;
+  }
+
+  .toggle-thumb {
+    width: 20px;
+    height: 20px;
+  }
+
+  .theme-toggle.is-dark .toggle-thumb {
+    transform: translateX(24px);
+  }
+
+  .icon-sun svg,
+  .icon-moon svg {
+    width: 14px;
+    height: 14px;
   }
 }
 </style>

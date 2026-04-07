@@ -15,11 +15,16 @@ const notesStore = useNotesStore();
 const editingNoteId = ref<string | null>(null);
 const previewNoteId = ref<string | null>(null);
 const noteListRef = ref<InstanceType<typeof NoteList> | null>(null);
+const isLoaded = ref(false);
 
 onMounted(async () => {
   await appStore.init();
   locale.value = appStore.locale;
   await notesStore.init();
+  // 初始加载动画
+  setTimeout(() => {
+    isLoaded.value = true;
+  }, 100);
 });
 
 function handleEdit(noteId: string) {
@@ -49,11 +54,11 @@ function handleDelete(noteId: string) {
 }
 
 // 当前选中的笔记 ID
-const activeNoteId = computed(() => previewNoteId);
+const activeNoteId = computed(() => previewNoteId.value);
 </script>
 
 <template>
-  <div class="app-shell">
+  <div class="app-shell" :class="{ 'is-loaded': isLoaded }">
     <!-- 工具栏 -->
     <Toolbar />
 
@@ -70,11 +75,16 @@ const activeNoteId = computed(() => previewNoteId);
         />
       </div>
 
-      <!-- 装饰背景 -->
+      <!-- 装饰背景 - 升级版 -->
       <div class="ambient-bg">
-        <div class="ambient-blob blob-1"></div>
-        <div class="ambient-blob blob-2"></div>
-        <div class="ambient-blob blob-3"></div>
+        <!-- 主光晕 -->
+        <div class="ambient-glow glow-primary"></div>
+        <div class="ambient-glow glow-secondary"></div>
+        <div class="ambient-glow glow-tertiary"></div>
+        <!-- 网格纹理 -->
+        <div class="grid-pattern"></div>
+        <!-- 噪点纹理 -->
+        <div class="noise-overlay"></div>
       </div>
 
       <!-- 笔记内容展示区 -->
@@ -89,16 +99,19 @@ const activeNoteId = computed(() => previewNoteId);
         </div>
       </Transition>
 
-      <!-- 新建按钮 -->
+      <!-- 新建按钮 - 升级版 -->
       <button class="fab" @click="handleNewNote" :title="t('toolbar.newNote')">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
-        >
-          <path d="M12 5v14M5 12h14" />
-        </svg>
+        <span class="fab-icon">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </span>
+        <span class="fab-pulse"></span>
       </button>
     </main>
 
@@ -119,6 +132,12 @@ const activeNoteId = computed(() => previewNoteId);
   background: var(--bg-primary);
   color: var(--text-primary);
   overflow: hidden;
+  opacity: 0;
+  transition: opacity var(--transition-slow);
+}
+
+.app-shell.is-loaded {
+  opacity: 1;
 }
 
 .main-area {
@@ -129,7 +148,9 @@ const activeNoteId = computed(() => previewNoteId);
   overflow: hidden;
 }
 
-/* Ambient Background */
+/* ========================================
+   AMBIENT BACKGROUND - 升级版
+   ======================================== */
 .ambient-bg {
   position: absolute;
   inset: 0;
@@ -138,59 +159,92 @@ const activeNoteId = computed(() => previewNoteId);
   z-index: 0;
 }
 
-.ambient-blob {
+/* 光晕效果 */
+.ambient-glow {
   position: absolute;
   border-radius: 50%;
-  filter: blur(120px);
-  opacity: 0.12;
-  animation: float 20s ease-in-out infinite;
+  filter: blur(100px);
+  opacity: 0.15;
+  animation: glow-float 25s ease-in-out infinite;
 }
 
-.blob-1 {
-  width: 500px;
-  height: 500px;
-  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
-  top: -15%;
-  right: -5%;
+.glow-primary {
+  width: 600px;
+  height: 600px;
+  background: var(--accent-gradient-cool);
+  top: -20%;
+  right: -10%;
   animation-delay: 0s;
 }
 
-.blob-2 {
-  width: 400px;
-  height: 400px;
-  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
-  bottom: -10%;
-  left: -5%;
-  animation-delay: -7s;
+.glow-secondary {
+  width: 500px;
+  height: 500px;
+  background: var(--accent-gradient-warm);
+  bottom: -15%;
+  left: -10%;
+  animation-delay: -8s;
 }
 
-.blob-3 {
-  width: 300px;
-  height: 300px;
-  background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%);
-  top: 40%;
-  left: 30%;
-  animation-delay: -14s;
+.glow-tertiary {
+  width: 350px;
+  height: 350px;
+  background: var(--accent-gradient);
+  top: 50%;
+  left: 40%;
+  transform: translate(-50%, -50%);
+  animation-delay: -16s;
 }
 
-.dark .ambient-blob {
-  opacity: 0.06;
+.dark .ambient-glow {
+  opacity: 0.08;
 }
 
-@keyframes float {
+@keyframes glow-float {
   0%,
   100% {
     transform: translate(0, 0) scale(1);
   }
-  33% {
-    transform: translate(30px, -30px) scale(1.05);
+  25% {
+    transform: translate(40px, -30px) scale(1.1);
   }
-  66% {
-    transform: translate(-20px, 20px) scale(0.95);
+  50% {
+    transform: translate(-20px, 40px) scale(0.95);
+  }
+  75% {
+    transform: translate(-30px, -20px) scale(1.05);
   }
 }
 
-/* Content Wrapper */
+/* 网格纹理 */
+.grid-pattern {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--border-light) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-light) 1px, transparent 1px);
+  background-size: 60px 60px;
+  opacity: 0.4;
+  mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(
+    ellipse at center,
+    black 0%,
+    transparent 70%
+  );
+}
+
+/* 噪点纹理 */
+.noise-overlay {
+  position: absolute;
+  inset: 0;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* ========================================
+   CONTENT WRAPPER
+   ======================================== */
 .content-wrapper {
   position: relative;
   z-index: 2;
@@ -198,14 +252,16 @@ const activeNoteId = computed(() => previewNoteId);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
 }
 
 .content-wrapper.has-preview {
   display: none;
 }
 
-/* Content Panel */
+/* ========================================
+   CONTENT PANEL
+   ======================================== */
 .content-panel {
   position: relative;
   z-index: 1;
@@ -214,22 +270,106 @@ const activeNoteId = computed(() => previewNoteId);
   background: var(--bg-primary);
 }
 
-/* Slide Panel Transition */
+/* ========================================
+   SLIDE PANEL TRANSITION
+   ======================================== */
 .slide-panel-enter-active,
 .slide-panel-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-slow);
 }
 
 .slide-panel-enter-from,
 .slide-panel-leave-to {
   opacity: 0;
-  transform: translateX(20px);
+  transform: translateX(30px);
 }
 
+/* ========================================
+   FAB - 升级版
+   ======================================== */
+.fab {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  z-index: 100;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: var(--accent-gradient);
+  color: white;
+  cursor: pointer;
+  border-radius: 24px;
+  box-shadow:
+    var(--shadow-accent),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  transition: all var(--transition-slow);
+  overflow: hidden;
+}
+
+.fab-icon {
+  position: relative;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition-base);
+}
+
+.fab-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.fab-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  background: var(--accent-gradient);
+  opacity: 0;
+  z-index: 1;
+}
+
+.fab:hover {
+  transform: translateY(-6px) scale(1.05);
+  box-shadow:
+    0 16px 48px rgba(59, 130, 246, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+}
+
+.fab:hover .fab-icon {
+  transform: rotate(90deg);
+}
+
+.fab:active {
+  transform: translateY(-3px) scale(1.02);
+}
+
+.fab:hover .fab-pulse {
+  animation: fab-pulse 1.5s ease-out infinite;
+}
+
+@keyframes fab-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
 @media (max-width: 640px) {
   .content-wrapper {
     width: 100%;
-    border-right: none;
   }
 
   .content-wrapper.has-preview {
@@ -246,47 +386,37 @@ const activeNoteId = computed(() => previewNoteId);
   .fab {
     bottom: 20px;
     right: 20px;
-    width: 56px;
-    height: 56px;
-    border-radius: 18px;
+    width: 60px;
+    height: 60px;
+    border-radius: 20px;
   }
-}
 
-/* FAB */
-.fab {
-  position: fixed;
-  bottom: 28px;
-  right: 28px;
-  z-index: 100;
-  width: 64px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 20px;
-  border: none;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
-  cursor: pointer;
-  box-shadow:
-    0 8px 32px rgba(59, 130, 246, 0.4),
-    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+  .fab-icon {
+    width: 26px;
+    height: 26px;
+  }
 
-.fab svg {
-  width: 28px;
-  height: 28px;
-}
+  .ambient-glow {
+    filter: blur(80px);
+  }
 
-.fab:hover {
-  transform: translateY(-4px) scale(1.05);
-  box-shadow:
-    0 12px 40px rgba(59, 130, 246, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.15) inset;
-}
+  .glow-primary {
+    width: 400px;
+    height: 400px;
+  }
 
-.fab:active {
-  transform: translateY(-2px) scale(1.02);
+  .glow-secondary {
+    width: 350px;
+    height: 350px;
+  }
+
+  .glow-tertiary {
+    width: 250px;
+    height: 250px;
+  }
+
+  .grid-pattern {
+    background-size: 40px 40px;
+  }
 }
 </style>

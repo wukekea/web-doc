@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useNotesStore } from "@/stores/notes";
-import MarkdownRenderer from "@/components/MarkdownRenderer/index.vue";
 
 const notesStore = useNotesStore();
 
-const props = defineProps<{
+defineProps<{
   activeNoteId: string | null;
 }>();
 
@@ -15,7 +14,29 @@ const emit = defineEmits<{
   delete: [id: string];
 }>();
 
-// 格式化时间 YYYY-MM-DD HH:mm
+// 格式化时间显示
+function formatTime(timestamp: number): string {
+  if (!timestamp) return "";
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (minutes < 1) return "刚刚";
+  if (minutes < 60) return `${minutes} 分钟前`;
+  if (hours < 24) return `${hours} 小时前`;
+  if (days < 7) return `${days} 天前`;
+
+  // 超过7天显示具体日期
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+// 格式化完整日期时间
 function formatDateTime(timestamp: number): string {
   if (!timestamp) return "";
   const date = new Date(timestamp);
@@ -29,36 +50,96 @@ function formatDateTime(timestamp: number): string {
 
 // 所有笔记（按更新时间降序）
 const allNotes = computed(() => notesStore.getAllNotes());
+
+// 统计笔记数量
+const notesCount = computed(() => allNotes.value.length);
+
+// 获取笔记内容预览（纯文本）
+function getPreviewText(content: string): string {
+  return content
+    .replace(/#{1,6}\s+/g, "") // 移除标题标记
+    .replace(/\*\*/g, "") // 移除粗体标记
+    .replace(/\*/g, "") // 移除斜体标记
+    .replace(/`/g, "") // 移除代码标记
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // 移除链接
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, "") // 移除图片
+    .replace(/\n+/g, " ") // 替换换行为空格
+    .trim()
+    .substring(0, 120); // 限制长度
+}
 </script>
 
 <template>
   <div class="note-list">
-    <div v-if="allNotes.length === 0" class="empty-state">
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.5"
-        class="empty-icon"
-      >
-        <path d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-        <circle cx="12" cy="12" r="10" />
-      </svg>
-      <p class="empty-text">点击右下角按钮创建第一个笔记</p>
+    <!-- 头部统计 -->
+    <div class="list-header">
+      <h2 class="header-title">我的笔记</h2>
+      <span class="header-count">{{ notesCount }} 篇</span>
     </div>
+
+    <!-- 空状态 -->
+    <div v-if="allNotes.length === 0" class="empty-state">
+      <div class="empty-illustration">
+        <svg viewBox="0 0 120 120" fill="none" class="empty-svg">
+          <defs>
+            <linearGradient
+              id="emptyGradient"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop offset="0%" stop-color="var(--accent-primary)" />
+              <stop offset="100%" stop-color="var(--accent-secondary)" />
+            </linearGradient>
+          </defs>
+          <circle
+            cx="60"
+            cy="60"
+            r="50"
+            stroke="url(#emptyGradient)"
+            stroke-width="2"
+            fill="none"
+            opacity="0.3"
+          />
+          <path
+            d="M45 60h30M60 45v30"
+            stroke="var(--accent-primary)"
+            stroke-width="2.5"
+            stroke-linecap="round"
+          />
+          <circle
+            cx="60"
+            cy="60"
+            r="4"
+            fill="var(--accent-primary)"
+            opacity="0.2"
+          />
+        </svg>
+      </div>
+      <p class="empty-text">还没有笔记</p>
+      <p class="empty-hint">点击右下角的按钮创建你的第一篇笔记</p>
+    </div>
+
+    <!-- 笔记卡片列表 -->
     <div v-else class="note-cards">
       <div
-        v-for="note in allNotes"
+        v-for="(note, index) in allNotes"
         :key="note.id"
         class="note-card"
+        :class="{ 'is-active': activeNoteId === note.id }"
+        :style="{ animationDelay: `${index * 50}ms` }"
         @click="emit('preview', note.id)"
       >
-        <!-- 标题和操作按钮 -->
-        <div class="note-header">
-          <h3 class="note-title">{{ note.title || "无标题" }}</h3>
-          <div class="note-actions">
+        <!-- 卡片顶部 -->
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-dot"></span>
+            <h3 class="card-title">{{ note.title || "无标题" }}</h3>
+          </div>
+          <div class="card-actions">
             <button
-              class="action-btn"
+              class="action-btn edit-btn"
               @click.stop="emit('edit', note.id)"
               title="编辑"
             >
@@ -96,15 +177,16 @@ const allNotes = computed(() => notesStore.getAllNotes());
         </div>
 
         <!-- 内容预览 -->
-        <div v-if="note.content" class="note-preview">
-          <MarkdownRenderer :content="note.content" />
+        <div v-if="note.content" class="card-preview">
+          <p class="preview-text">{{ getPreviewText(note.content) }}</p>
+          <span class="preview-gradient"></span>
         </div>
 
-        <!-- 元信息 -->
-        <div class="note-meta">
-          <div class="meta-time">
+        <!-- 卡片底部 -->
+        <div class="card-footer">
+          <div class="footer-meta">
             <svg
-              class="time-icon"
+              class="meta-icon"
               viewBox="0 0 16 16"
               fill="none"
               stroke="currentColor"
@@ -113,24 +195,10 @@ const allNotes = computed(() => notesStore.getAllNotes());
               <circle cx="8" cy="8" r="6" />
               <path d="M8 4v4M8 8h3" />
             </svg>
-            <span class="time-text"
-              >创建：{{ formatDateTime(note.createdAt) }}</span
-            >
+            <span class="meta-text">{{ formatTime(note.updatedAt) }}</span>
           </div>
-          <div class="meta-time">
-            <svg
-              class="time-icon"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-            >
-              <path d="M4 4h8M12 4v8M12 8h-3" />
-            </svg>
-            <span class="time-text"
-              >更新：{{ formatDateTime(note.updatedAt) }}</span
-            >
-          </div>
+          <div class="footer-divider"></div>
+          <span class="footer-date">{{ formatDateTime(note.createdAt) }}</span>
         </div>
       </div>
     </div>
@@ -140,52 +208,139 @@ const allNotes = computed(() => notesStore.getAllNotes());
 <style scoped>
 .note-list {
   width: 100%;
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 32px;
+  animation: slideUp 0.5s ease-out;
 }
 
+/* ========================================
+   LIST HEADER
+   ======================================== */
+.list-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding: 0 4px;
+}
+
+.header-title {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.header-count {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  padding: 4px 12px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-full);
+}
+
+/* ========================================
+   NOTE CARDS
+   ======================================== */
 .note-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
 }
 
 .note-card {
   background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
   padding: 0;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: var(--shadow-soft);
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
-  min-height: 180px;
-  max-height: 180px;
+  min-height: 200px;
+  max-height: 200px;
   overflow: hidden;
+  position: relative;
+  animation: slideUp 0.4s ease-out backwards;
+}
+
+.note-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--accent-gradient);
+  opacity: 0;
+  transition: opacity var(--transition-base);
 }
 
 .note-card:hover {
-  border-color: var(--accent-secondary);
-  box-shadow: var(--shadow-medium);
-  transform: translateY(-2px);
+  border-color: var(--accent-primary);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
 }
 
-.note-header {
+.note-card:hover::before {
+  opacity: 1;
+}
+
+.note-card.is-active {
+  border-color: var(--accent-primary);
+  background: var(--bg-hover);
+}
+
+.note-card.is-active::before {
+  opacity: 1;
+}
+
+/* ========================================
+   CARD HEADER
+   ======================================== */
+.card-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 16px 20px;
   background: var(--bg-secondary);
   flex-shrink: 0;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-light);
 }
 
-.note-title {
-  font-size: 0.9375rem;
+.card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.card-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
+}
+
+.note-card:hover .card-dot {
+  transform: scale(1.5);
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--text-primary);
   margin: 0;
   line-height: 1.4;
@@ -195,29 +350,38 @@ const allNotes = computed(() => notesStore.getAllNotes());
   white-space: nowrap;
 }
 
-.note-actions {
+.card-actions {
   display: flex;
   gap: 4px;
   flex-shrink: 0;
+  opacity: 0;
+  transform: translateX(4px);
+  transition: all var(--transition-base);
+}
+
+.note-card:hover .card-actions {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .action-btn {
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
   background: transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s ease;
-  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+  color: var(--text-tertiary);
 }
 
 .action-btn:hover {
   background: var(--accent-soft);
   color: var(--accent-primary);
+  transform: scale(1.1);
 }
 
 .action-btn.delete-btn:hover {
@@ -226,94 +390,104 @@ const allNotes = computed(() => notesStore.getAllNotes());
 }
 
 .action-btn svg {
-  width: 13px;
-  height: 13px;
+  width: 16px;
+  height: 16px;
 }
 
-.note-preview {
+/* ========================================
+   CARD PREVIEW
+   ======================================== */
+.card-preview {
   flex: 1;
   overflow: hidden;
-  color: var(--text-secondary);
-  font-size: 0.8125rem;
-  line-height: 1.6;
-  padding: 12px 16px;
+  padding: 16px 20px;
   position: relative;
   min-height: 0;
 }
 
-.note-preview :deep(.markdown-renderer) {
-  font-size: 0.8125rem;
-  line-height: 1.6;
-}
-
-.note-preview :deep(h1),
-.note-preview :deep(h2),
-.note-preview :deep(h3) {
+.preview-text {
+  font-family: var(--font-body);
   font-size: 0.875rem;
-  margin-top: 0.4em;
-  margin-bottom: 0.2em;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  margin: 0;
+  position: relative;
+  z-index: 1;
 }
 
-.note-preview :deep(p),
-.note-preview :deep(ul),
-.note-preview :deep(ol) {
-  margin-bottom: 0.3em;
-}
-
-.note-preview :deep(p:last-child),
-.note-preview :deep(ul:last-child),
-.note-preview :deep(ol:last-child) {
-  margin-bottom: 0;
-}
-
-/* 内容溢出时显示省略效果 */
-.note-preview::after {
-  content: "";
+.preview-gradient {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 2.5em;
+  height: 60px;
   background: linear-gradient(
     to bottom,
     transparent 0%,
-    transparent 50%,
+    transparent 30%,
     var(--bg-primary) 100%
   );
   pointer-events: none;
 }
 
-.note-meta {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 8px 16px 10px 16px;
-  background: var(--bg-primary);
-  flex-shrink: 0;
-  border-top: 1px solid var(--border-color);
+.dark .preview-gradient {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    transparent 30%,
+    var(--bg-primary) 100%
+  );
 }
 
-.meta-time {
+/* ========================================
+   CARD FOOTER
+   ======================================== */
+.card-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px 16px;
+  background: var(--bg-primary);
+  flex-shrink: 0;
+  border-top: 1px solid var(--border-light);
+}
+
+.footer-meta {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.6875rem;
+}
+
+.meta-icon {
+  width: 12px;
+  height: 12px;
+  opacity: 0.5;
+}
+
+.meta-text {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
   color: var(--text-tertiary);
 }
 
-.time-icon {
-  width: 11px;
-  height: 11px;
-  opacity: 0.7;
+.footer-divider {
+  width: 1px;
+  height: 12px;
+  background: var(--border-light);
 }
 
-.time-text {
+.footer-date {
   font-family:
     ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
   letter-spacing: 0.02em;
 }
 
-/* 空状态 */
+/* ========================================
+   EMPTY STATE
+   ======================================== */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -321,28 +495,54 @@ const allNotes = computed(() => notesStore.getAllNotes());
   justify-content: center;
   padding: 80px 20px;
   text-align: center;
+  animation: slideUp 0.5s ease-out;
 }
 
-.empty-icon {
-  width: 64px;
-  height: 64px;
-  color: var(--text-tertiary);
-  margin-bottom: 16px;
+.empty-illustration {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.empty-svg {
+  width: 120px;
+  height: 120px;
+  animation: float 6s ease-in-out infinite;
 }
 
 .empty-text {
-  font-size: 1rem;
-  color: var(--text-secondary);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px;
 }
 
-/* 响应式 */
-@media (max-width: 640px) {
+.empty-hint {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 768px) {
   .note-list {
-    padding: 12px;
+    padding: 24px 20px;
+  }
+
+  .list-header {
+    margin-bottom: 24px;
+  }
+
+  .header-title {
+    font-size: 1.5rem;
   }
 
   .note-cards {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .note-card {
@@ -350,10 +550,44 @@ const allNotes = computed(() => notesStore.getAllNotes());
     max-height: 180px;
   }
 
-  .note-meta {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
+  .card-actions {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .empty-svg {
+    width: 100px;
+    height: 100px;
+  }
+
+  .empty-text {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .note-list {
+    padding: 20px 12px;
+  }
+
+  .list-header {
+    gap: 12px;
+  }
+
+  .header-title {
+    font-size: 1.25rem;
+  }
+
+  .card-header {
+    padding: 14px 16px;
+  }
+
+  .card-preview {
+    padding: 14px 16px;
+  }
+
+  .card-footer {
+    padding: 10px 16px 14px;
   }
 }
 </style>

@@ -53,6 +53,14 @@ function handleDelete() {
   if (!props.noteId) return;
   emit("delete", props.noteId);
 }
+
+// 统计信息
+const charCount = computed(() => content.value.length);
+const wordCount = computed(() => {
+  const text = content.value.trim();
+  if (!text) return 0;
+  return text.split(/\s+/).filter((word) => word.length > 0).length;
+});
 </script>
 
 <template>
@@ -94,7 +102,7 @@ function handleDelete() {
 
           <!-- 内容区 -->
           <div class="panel-content">
-            <!-- 标题 -->
+            <!-- 标题输入 -->
             <div class="field-group">
               <label class="field-label">{{ t("editor.titleLabel") }}</label>
               <input
@@ -102,12 +110,21 @@ function handleDelete() {
                 type="text"
                 class="field-input"
                 :placeholder="t('editor.titleLabel')"
+                maxlength="100"
               />
+              <div class="field-counter">{{ title.length }}/100</div>
             </div>
 
-            <!-- 内容 -->
+            <!-- 内容编辑区 -->
             <div class="field-group field-flex">
-              <label class="field-label">{{ t("editor.content") }}</label>
+              <div class="field-header">
+                <label class="field-label">{{ t("editor.content") }}</label>
+                <div class="field-stats">
+                  <span class="stat-item">{{ wordCount }} 字</span>
+                  <span class="stat-divider">·</span>
+                  <span class="stat-item">{{ charCount }} 字符</span>
+                </div>
+              </div>
               <textarea
                 v-model="content"
                 class="field-textarea"
@@ -118,7 +135,7 @@ function handleDelete() {
 
           <!-- 底部操作 -->
           <footer class="panel-footer">
-            <!-- 操作 -->
+            <!-- 次要操作 -->
             <div class="secondary-actions">
               <button class="action-btn delete-action" @click="handleDelete">
                 <svg
@@ -166,63 +183,83 @@ function handleDelete() {
   z-index: 1000;
   display: flex;
   justify-content: flex-end;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(15, 23, 42, 0.6);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  animation: fadeIn 0.2s ease-out;
 }
 
 .editor-panel {
-  width: 440px;
+  width: 480px;
   max-width: 100vw;
   height: 100%;
   display: flex;
   flex-direction: column;
   background: var(--glass-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border-left: 1px solid var(--glass-border);
-  box-shadow:
-    -20px 0 60px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.15);
+  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Header */
+/* ========================================
+   HEADER
+   ======================================== */
 .panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 24px 28px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-light);
   background: linear-gradient(180deg, var(--bg-secondary) 0%, transparent 100%);
+  flex-shrink: 0;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
 }
 
 .header-icon {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-  border-radius: 14px;
+  background: var(--accent-gradient);
+  border-radius: var(--radius-lg);
   color: white;
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+  box-shadow: var(--shadow-accent);
+  position: relative;
+  overflow: hidden;
+}
+
+.header-icon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    transparent 50%
+  );
+  pointer-events: none;
 }
 
 .header-icon svg {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
+  position: relative;
+  z-index: 1;
 }
 
 .header-title {
-  font-size: 1.25rem;
+  font-family: var(--font-display);
+  font-size: 1.375rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   color: var(--text-primary);
 }
 
@@ -232,18 +269,19 @@ function handleDelete() {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-light);
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
 }
 
 .close-btn:hover {
   background: var(--bg-secondary);
   color: var(--text-primary);
-  border-color: var(--text-tertiary);
+  border-color: var(--border-medium);
+  transform: rotate(90deg);
 }
 
 .close-btn svg {
@@ -251,7 +289,9 @@ function handleDelete() {
   height: 20px;
 }
 
-/* Content */
+/* ========================================
+   CONTENT
+   ======================================== */
 .panel-content {
   flex: 1;
   display: flex;
@@ -265,6 +305,7 @@ function handleDelete() {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  position: relative;
 }
 
 .field-flex {
@@ -272,7 +313,15 @@ function handleDelete() {
   min-height: 0;
 }
 
+.field-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .field-label {
+  font-family: var(--font-body);
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -280,19 +329,49 @@ function handleDelete() {
   color: var(--text-tertiary);
 }
 
+.field-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stat-item {
+  font-family:
+    ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.stat-divider {
+  color: var(--text-muted);
+}
+
+.field-counter {
+  position: absolute;
+  top: -4px;
+  right: 0;
+  font-family:
+    ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, monospace;
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
+}
+
 .field-input {
-  padding: 16px 18px;
-  background: var(--bg-secondary);
-  border: 2px solid var(--border-color);
-  border-radius: 14px;
+  width: 100%;
+  padding: 16px 20px;
+  font-family: var(--font-body);
   font-size: 1rem;
   font-weight: 500;
   color: var(--text-primary);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
 }
 
 .field-input::placeholder {
-  color: var(--text-tertiary);
+  color: var(--text-muted);
   font-weight: 400;
 }
 
@@ -305,21 +384,21 @@ function handleDelete() {
 
 .field-textarea {
   flex: 1;
-  min-height: 240px;
-  padding: 16px 18px;
-  background: var(--bg-secondary);
-  border: 2px solid var(--border-color);
-  border-radius: 14px;
+  min-height: 300px;
+  padding: 16px 20px;
+  font-family: var(--font-body);
   font-size: 0.9375rem;
-  line-height: 1.7;
+  line-height: 1.8;
   color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-lg);
   resize: none;
-  font-family: inherit;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-base);
 }
 
 .field-textarea::placeholder {
-  color: var(--text-tertiary);
+  color: var(--text-muted);
 }
 
 .field-textarea:focus {
@@ -329,14 +408,17 @@ function handleDelete() {
   box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
-/* Footer */
+/* ========================================
+   FOOTER
+   ======================================== */
 .panel-footer {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
   padding: 24px 28px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border-light);
   background: var(--bg-secondary);
+  flex-shrink: 0;
 }
 
 .secondary-actions {
@@ -345,17 +427,19 @@ function handleDelete() {
 }
 
 .action-btn {
-  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   padding: 12px 16px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-base);
+  border: 2px solid;
+  background: transparent;
 }
 
 .action-btn svg {
@@ -363,27 +447,15 @@ function handleDelete() {
   height: 18px;
 }
 
-.add-action {
-  background: transparent;
-  border: 2px solid var(--accent-primary);
-  color: var(--accent-primary);
-}
-
-.add-action:hover {
-  background: var(--accent-soft);
-  border-color: var(--accent-secondary);
-  transform: translateY(-1px);
-}
-
 .delete-action {
-  background: transparent;
-  border: 2px solid var(--danger);
+  border-color: var(--danger);
   color: var(--danger);
 }
 
 .delete-action:hover {
   background: var(--danger-soft);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
 }
 
 .primary-actions {
@@ -395,22 +467,25 @@ function handleDelete() {
 .btn-save {
   flex: 1;
   padding: 16px 24px;
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
+  font-family: var(--font-body);
   font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-base);
 }
 
 .btn-cancel {
   background: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-light);
   color: var(--text-secondary);
 }
 
 .btn-cancel:hover {
   background: var(--bg-primary);
   color: var(--text-primary);
+  border-color: var(--border-medium);
+  transform: translateY(-1px);
 }
 
 .btn-save {
@@ -418,10 +493,10 @@ function handleDelete() {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: var(--accent-gradient);
   border: none;
   color: white;
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.35);
+  box-shadow: var(--shadow-accent);
 }
 
 .btn-save svg {
@@ -431,22 +506,24 @@ function handleDelete() {
 
 .btn-save:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.45);
+  box-shadow: var(--shadow-glow);
 }
 
 .btn-save:active {
   transform: translateY(0);
 }
 
-/* Transitions */
+/* ========================================
+   TRANSITIONS
+   ======================================== */
 .editor-enter-active,
 .editor-leave-active {
-  transition: opacity 0.35s ease;
+  transition: opacity 0.3s ease;
 }
 
 .editor-enter-active .editor-panel,
 .editor-leave-active .editor-panel {
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .editor-enter-from,
@@ -459,7 +536,10 @@ function handleDelete() {
   transform: translateX(100%);
 }
 
-@media (max-width: 480px) {
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 520px) {
   .editor-panel {
     width: 100%;
   }
@@ -469,6 +549,47 @@ function handleDelete() {
   .panel-footer {
     padding-left: 20px;
     padding-right: 20px;
+  }
+
+  .header-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .header-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .header-title {
+    font-size: 1.125rem;
+  }
+
+  .field-textarea {
+    min-height: 240px;
+  }
+
+  .secondary-actions {
+    flex-direction: column;
+  }
+
+  .action-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  .panel-header,
+  .panel-content,
+  .panel-footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .btn-cancel,
+  .btn-save {
+    padding: 14px 20px;
+    font-size: 0.875rem;
   }
 }
 </style>

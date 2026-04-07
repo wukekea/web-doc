@@ -12,10 +12,31 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: [];
   delete: [id: string];
-  edit: [id: string]; // 编辑事件传递给 App
+  edit: [id: string];
 }>();
 
-// 格式化时间 YYYY-MM-DD HH:mm
+// 格式化时间显示
+function formatTime(timestamp: number): string {
+  if (!timestamp) return "";
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (minutes < 1) return "刚刚";
+  if (minutes < 60) return `${minutes} 分钟前`;
+  if (hours < 24) return `${hours} 小时前`;
+  if (days < 7) return `${days} 天前`;
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+// 格式化完整日期时间
 function formatDateTime(timestamp: number): string {
   if (!timestamp) return "";
   const date = new Date(timestamp);
@@ -76,6 +97,9 @@ function handleEdit() {
   <Teleport to="body">
     <Transition name="preview">
       <div v-if="noteId" class="preview-overlay" @click.self="handleClose">
+        <!-- 背景光效 -->
+        <div class="preview-glow preview-glow-1"></div>
+        <div class="preview-glow preview-glow-2"></div>
         <div class="preview-panel">
           <!-- 头部 -->
           <header class="panel-header">
@@ -95,7 +119,13 @@ function handleEdit() {
                   />
                 </svg>
               </div>
-              <h2 class="header-title">{{ title || "无标题" }}</h2>
+              <div class="header-text">
+                <h2 class="header-title">{{ title || "无标题" }}</h2>
+                <p v-if="currentNote" class="header-time">
+                  {{ formatDateTime(currentNote.createdAt) }} ·
+                  {{ formatTime(currentNote.updatedAt) }}
+                </p>
+              </div>
             </div>
             <div class="header-right">
               <button class="header-btn" @click="handleEdit" title="编辑">
@@ -144,38 +174,7 @@ function handleEdit() {
 
           <!-- 内容区 -->
           <div class="panel-content">
-            <div v-if="currentNote" class="meta-info">
-              <div class="meta-item">
-                <svg
-                  class="meta-icon"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                >
-                  <circle cx="8" cy="8" r="6" />
-                  <path d="M8 4v4M8 8h3" />
-                </svg>
-                <span class="meta-text"
-                  >创建：{{ formatDateTime(currentNote.createdAt) }}</span
-                >
-              </div>
-              <div class="meta-item">
-                <svg
-                  class="meta-icon"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                >
-                  <path d="M4 4h8M12 4v8M12 8h-3" />
-                </svg>
-                <span class="meta-text"
-                  >更新：{{ formatDateTime(currentNote.updatedAt) }}</span
-                >
-              </div>
-            </div>
-            <div class="content-divider"></div>
+            <!-- Markdown 内容 -->
             <div class="markdown-content">
               <MarkdownRenderer :content="content" />
             </div>
@@ -194,67 +193,136 @@ function handleEdit() {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(15, 23, 42, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: fadeIn 0.2s ease-out;
 }
 
 .preview-panel {
-  width: 90%;
-  max-width: 900px;
-  max-height: 85vh;
+  width: 92%;
+  max-width: 960px;
+  max-height: 88vh;
   background: var(--glass-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
-  border-radius: 20px;
-  box-shadow:
-    -20px 0 60px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  border-radius: var(--radius-2xl);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  z-index: 1;
 }
 
-/* Header */
+.preview-glow {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.preview-glow-1 {
+  width: 600px;
+  height: 600px;
+  background: var(--accent-gradient-cool);
+  top: -20%;
+  right: -10%;
+}
+
+.preview-glow-2 {
+  width: 500px;
+  height: 500px;
+  background: var(--accent-gradient-warm);
+  bottom: -20%;
+  left: -10%;
+}
+
+/* ========================================
+   HEADER
+   ======================================== */
 .panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--border-color);
-  background: linear-gradient(180deg, var(--bg-secondary) 0%, transparent 100%);
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .header-left {
   display: flex;
-  align-items: center;
-  gap: 14px;
+  align-items: flex-start;
+  gap: 16px;
+  min-width: 0;
 }
 
 .header-icon {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-  border-radius: 14px;
+  background: var(--accent-gradient);
+  border-radius: var(--radius-lg);
   color: white;
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+  box-shadow: var(--shadow-accent);
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.header-icon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2) 0%,
+    transparent 50%
+  );
+  pointer-events: none;
 }
 
 .header-icon svg {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 
 .header-title {
-  font-size: 1.375rem;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   color: var(--text-primary);
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-time {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--text-tertiary);
+  opacity: 0.7;
 }
 
 .header-right {
@@ -264,132 +332,222 @@ function handleEdit() {
 }
 
 .header-btn {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
+  border: 1px solid var(--border-light);
   background: var(--bg-tertiary);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-base);
   color: var(--text-secondary);
 }
 
 .header-btn:hover {
   background: var(--accent-soft);
   color: var(--accent-primary);
+  border-color: var(--accent-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .header-btn.delete-btn:hover {
   background: var(--danger-soft);
   color: var(--danger);
+  border-color: var(--danger);
 }
 
 .header-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
 
 .close-btn {
-  width: 40px;
-  height: 40px;
-  border: none;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border-light);
   background: var(--bg-tertiary);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: all 0.2s ease;
-  color: var(--text-secondary);
+  transition: all var(--transition-base);
+  color: var(--text-tertiary);
 }
 
 .close-btn:hover {
   background: var(--bg-secondary);
   color: var(--text-primary);
+  border-color: var(--border-medium);
+  transform: rotate(90deg);
 }
 
 .close-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }
 
-/* Content */
+/* ========================================
+   CONTENT
+   ======================================== */
 .panel-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  padding: 24px 28px;
   overflow-y: auto;
+  min-height: 0;
+  position: relative;
+  z-index: 1;
 }
 
-.meta-info {
-  display: flex;
-  gap: 24px;
-  padding-bottom: 16px;
-  flex-shrink: 0;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.meta-icon {
-  width: 14px;
-  height: 14px;
-  opacity: 0.6;
-}
-
-.meta-text {
-  font-size: 0.8125rem;
-  color: var(--text-tertiary);
-  font-family:
-    ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, monospace;
-  letter-spacing: 0.02em;
-}
-
-.content-divider {
-  height: 1px;
-  background: var(--border-color);
-  margin-bottom: 20px;
-}
-
+/* ========================================
+   MARKDOWN CONTENT
+   ======================================== */
 .markdown-content {
   flex: 1;
   min-height: 0;
+  animation: fadeIn 0.4s ease-out 0.1s backwards;
 }
 
 .markdown-content :deep(.markdown-renderer) {
-  font-size: 1rem;
-  line-height: 1.8;
+  font-size: 1.0625rem;
+  line-height: 1.85;
+  color: var(--text-primary);
 }
 
 .markdown-content :deep(h1) {
-  font-size: 1.25rem;
-  margin: 1.5em 0 0.75em;
+  font-family: var(--font-display);
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin: 2em 0 1em;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
 }
 
 .markdown-content :deep(h2) {
-  font-size: 1.15rem;
-  margin: 1.25em 0 0.6em;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 1.75em 0 0.875em;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
 }
 
 .markdown-content :deep(h3) {
-  font-size: 1.125rem;
-  margin: 1em 0 0.5em;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1.5em 0 0.75em;
+  color: var(--text-primary);
+  letter-spacing: -0.015em;
 }
 
 .markdown-content :deep(p) {
-  margin: 1em 0;
+  margin: 1.25em 0;
+  color: var(--text-secondary);
 }
 
 .markdown-content :deep(ul),
 .markdown-content :deep(ol) {
-  margin: 1em 0;
+  margin: 1.25em 0;
+  padding-left: 1.75em;
+  color: var(--text-secondary);
 }
 
-/* Transitions */
+.markdown-content :deep(li) {
+  margin: 0.625em 0;
+  line-height: 1.8;
+}
+
+.markdown-content :deep(code) {
+  font-family:
+    ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, monospace;
+  background: var(--bg-tertiary);
+  padding: 0.2em 0.5em;
+  border-radius: 4px;
+  font-size: 0.875em;
+  color: var(--accent-primary);
+  border: 1px solid var(--border-light);
+}
+
+.markdown-content :deep(pre) {
+  background: var(--bg-secondary);
+  padding: 1.25em;
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  margin: 1.5em 0;
+  border: 1px solid var(--border-light);
+}
+
+.markdown-content :deep(pre code) {
+  background: none;
+  padding: 0;
+  border: none;
+  color: var(--text-primary);
+}
+
+.markdown-content :deep(blockquote) {
+  border-left: 4px solid var(--accent-primary);
+  padding-left: 1.25em;
+  margin: 1.5em 0;
+  color: var(--text-secondary);
+  font-style: italic;
+  background: var(--bg-hover);
+  padding: 1em 1.25em;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.markdown-content :deep(a) {
+  color: var(--accent-primary);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+.markdown-content :deep(a:hover) {
+  color: var(--accent-secondary);
+  border-bottom-color: var(--accent-secondary);
+}
+
+.markdown-content :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+}
+
+.markdown-content :deep(th),
+.markdown-content :deep(td) {
+  padding: 0.875em 1em;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.markdown-content :deep(th) {
+  background: var(--bg-secondary);
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+}
+
+.markdown-content :deep(tr:last-child td) {
+  border-bottom: none;
+}
+
+.markdown-content :deep(img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-lg);
+  margin: 1.5em 0;
+  box-shadow: var(--shadow-md);
+}
+
+/* ========================================
+   TRANSITIONS
+   ======================================== */
 .preview-enter-active,
 .preview-leave-active {
   transition: opacity 0.3s ease;
@@ -402,20 +560,23 @@ function handleEdit() {
 
 .preview-enter-active .preview-panel,
 .preview-leave-active .preview-panel {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .preview-enter-from .preview-panel,
 .preview-leave-to .preview-panel {
   transform: scale(0.9) translateY(20px);
+  opacity: 0;
 }
 
-/* Responsive */
-@media (max-width: 640px) {
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 768px) {
   .preview-panel {
     width: 95%;
     max-height: 90vh;
-    border-radius: 16px;
+    border-radius: var(--radius-xl);
   }
 
   .panel-header {
@@ -426,14 +587,69 @@ function handleEdit() {
     padding: 20px;
   }
 
-  .header-title {
-    font-size: 1.125rem;
+  .header-icon {
+    width: 40px;
+    height: 40px;
   }
 
-  .meta-info {
-    flex-direction: column;
-    gap: 8px;
-    align-items: flex-start;
+  .header-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .header-title {
+    font-size: 1.25rem;
+  }
+
+  .markdown-content :deep(.markdown-renderer) {
+    font-size: 1rem;
+  }
+
+  .markdown-content :deep(h1) {
+    font-size: 1.5rem;
+  }
+
+  .markdown-content :deep(h2) {
+    font-size: 1.25rem;
+  }
+
+  .markdown-content :deep(h3) {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .preview-panel {
+    width: 98%;
+    border-radius: var(--radius-lg);
+  }
+
+  .panel-header {
+    padding: 14px 16px;
+  }
+
+  .panel-content {
+    padding: 16px;
+  }
+
+  .header-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .header-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .close-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .close-btn svg {
+    width: 20px;
+    height: 20px;
   }
 }
 </style>
