@@ -202,8 +202,19 @@ function handleEdit() {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--bg-primary);
+  background: transparent;
   animation: slideInRight 0.3s ease-out;
+  position: relative;
+}
+
+/* 内容背景卡片 */
+.note-content::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--bg-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
 }
 
 /* ========================================
@@ -219,6 +230,9 @@ function handleEdit() {
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
 }
 
 .header-left {
@@ -322,6 +336,9 @@ function handleEdit() {
   overflow-y: auto;
   min-height: 0;
   animation: slideUp 0.4s ease-out 0.1s backwards;
+  position: relative;
+  z-index: 1;
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
 }
 
 /* ========================================
@@ -568,8 +585,13 @@ function handleEdit() {
    RESPONSIVE
    ======================================== */
 @media (max-width: 768px) {
+  .note-content::before {
+    border-radius: 0;
+  }
+
   .content-header {
     padding: 16px 20px;
+    border-radius: 0;
   }
 
   .back-btn {
@@ -583,6 +605,7 @@ function handleEdit() {
 
   .content-body {
     padding: 20px 24px;
+    border-radius: 0;
   }
 
   .meta-card {

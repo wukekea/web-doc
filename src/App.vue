@@ -90,12 +90,14 @@ const activeNoteId = computed(() => previewNoteId.value);
       <!-- 笔记内容展示区 -->
       <Transition name="slide-panel">
         <div v-if="previewNoteId" class="content-panel">
-          <NoteContent
-            :note-id="previewNoteId"
-            @close="handleClosePreview"
-            @delete="handleDelete"
-            @edit="handleEdit"
-          />
+          <div class="content-panel-inner">
+            <NoteContent
+              :note-id="previewNoteId"
+              @close="handleClosePreview"
+              @delete="handleDelete"
+              @edit="handleEdit"
+            />
+          </div>
         </div>
       </Transition>
 
@@ -268,6 +270,17 @@ const activeNoteId = computed(() => previewNoteId.value);
   flex: 1;
   overflow: hidden;
   background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.content-panel-inner {
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ========================================
@@ -381,6 +394,10 @@ const activeNoteId = computed(() => previewNoteId.value);
     inset: 0;
     z-index: 200;
     top: 64px;
+  }
+
+  .content-panel-inner {
+    max-width: 100%;
   }
 
   .fab {
