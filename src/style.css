@@ -163,29 +163,20 @@
    DEBUG BORDERS
    ======================================== */
 * {
-  border: calc(var(--debug-mode) * 1px) solid hsl(
-    calc(var(--depth, 0) * 137.5 + 0),
-    70%,
-    50%
-  );
+  border: calc(var(--debug-mode) * 1px) solid
+    hsl(calc(var(--depth, 0) * 137.5 + 0), 70%, 50%);
 }
 
 *::before {
   --depth: calc(var(--depth, 0) + 1);
-  border: calc(var(--debug-mode) * 1px) solid hsl(
-    calc(var(--depth, 0) * 137.5 + 0),
-    70%,
-    50%
-  );
+  border: calc(var(--debug-mode) * 1px) solid
+    hsl(calc(var(--depth, 0) * 137.5 + 0), 70%, 50%);
 }
 
 *::after {
   --depth: calc(var(--depth, 0) + 2);
-  border: calc(var(--debug-mode) * 1px) solid hsl(
-    calc(var(--depth, 0) * 137.5 + 0),
-    70%,
-    50%
-  );
+  border: calc(var(--debug-mode) * 1px) solid
+    hsl(calc(var(--depth, 0) * 137.5 + 0), 70%, 50%);
 }
 
 html {

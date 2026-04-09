@@ -95,6 +95,10 @@ function handleEdit() {
 
 <template>
   <div class="note-content">
+    <!-- 背景光效 -->
+    <div class="content-glow content-glow-1"></div>
+    <div class="content-glow content-glow-2"></div>
+
     <!-- 头部 -->
     <header class="content-header">
       <div class="header-left">
@@ -205,16 +209,56 @@ function handleEdit() {
   background: transparent;
   animation: slideInRight 0.3s ease-out;
   position: relative;
+  overflow: hidden;
 }
 
-/* 内容背景卡片 */
-.note-content::before {
-  content: "";
+/* 内容背景光效 */
+.content-glow {
   position: absolute;
-  inset: 0;
-  background: var(--bg-primary);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 0;
+  animation: glow-float 25s ease-in-out infinite;
+}
+
+.content-glow-1 {
+  width: 400px;
+  height: 400px;
+  background: var(--accent-gradient-cool);
+  top: -10%;
+  right: -15%;
+  animation-delay: 0s;
+}
+
+.content-glow-2 {
+  width: 350px;
+  height: 350px;
+  background: var(--accent-gradient-warm);
+  bottom: -10%;
+  left: -15%;
+  animation-delay: -8s;
+}
+
+.dark .content-glow {
+  opacity: 0.06;
+}
+
+@keyframes glow-float {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(30px, -20px) scale(1.1);
+  }
+  50% {
+    transform: translate(-15px, 30px) scale(0.95);
+  }
+  75% {
+    transform: translate(-25px, -15px) scale(1.05);
+  }
 }
 
 /* ========================================
@@ -224,15 +268,17 @@ function handleEdit() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 32px;
-  border-bottom: 1px solid var(--border-light);
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
+  padding: 20px 10px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-primary);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   flex-shrink: 0;
   position: relative;
   z-index: 1;
-  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  border-radius: var(--radius-xl);
+  margin: 0px 32px 16px 32px;
+  box-shadow: var(--shadow-md);
 }
 
 .header-left {
@@ -329,16 +375,32 @@ function handleEdit() {
    CONTENT BODY
    ======================================== */
 .content-body {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 20px 32px;
+  padding: 0 32px;
   overflow-y: auto;
-  min-height: 0;
   animation: slideUp 0.4s ease-out 0.1s backwards;
   position: relative;
   z-index: 1;
-  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+}
+
+/* 滚动条样式 */
+.content-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.content-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.content-body::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 3px;
+  transition: background var(--transition-fast);
+}
+
+.content-body::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
 }
 
 /* ========================================
@@ -348,12 +410,13 @@ function handleEdit() {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0;
-  background: transparent;
-  border: none;
-  border-radius: 0;
+  padding: 12px 16px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
   flex-shrink: 0;
-  height: 0;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
 }
 
 .meta-item {
@@ -426,24 +489,40 @@ function handleEdit() {
    CONTENT DIVIDER
    ======================================== */
 .content-divider {
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--border-medium) 50%,
-    transparent 100%
-  );
-  margin: 12px 0;
-  flex-shrink: 0;
+  display: none;
 }
 
 /* ========================================
    MARKDOWN CONTENT
    ======================================== */
 .markdown-content {
-  flex: 1;
-  min-height: 0;
+  padding: 20px 24px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
   animation: fadeIn 0.5s ease-out 0.2s backwards;
+  box-shadow: var(--shadow-md);
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+/* 滚动条样式 */
+.markdown-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.markdown-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.markdown-content::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 3px;
+  transition: background var(--transition-fast);
+}
+
+.markdown-content::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
 }
 
 .markdown-content :deep(.markdown-renderer) {
@@ -585,13 +664,9 @@ function handleEdit() {
    RESPONSIVE
    ======================================== */
 @media (max-width: 768px) {
-  .note-content::before {
-    border-radius: 0;
-  }
-
   .content-header {
     padding: 16px 20px;
-    border-radius: 0;
+    margin: 0 0 12px 0;
   }
 
   .back-btn {
@@ -604,23 +679,21 @@ function handleEdit() {
   }
 
   .content-body {
-    padding: 20px 24px;
-    border-radius: 0;
+    padding: 0 20px 20px;
   }
 
   .meta-card {
-    flex-direction: column;
-    gap: 16px;
-    align-items: stretch;
+    padding: 10px 14px;
+    margin-bottom: 12px;
   }
 
-  .meta-item {
-    gap: 10px;
+  .markdown-content {
+    padding: 16px 18px;
   }
 
-  .meta-divider {
-    width: 100%;
-    height: 1px;
+  .markdown-content {
+    padding: 16px 18px;
+    max-height: calc(100vh - 180px);
   }
 
   .markdown-content :deep(.markdown-renderer) {
@@ -660,7 +733,16 @@ function handleEdit() {
   }
 
   .content-body {
-    padding: 16px 20px;
+    padding: 0 16px 16px;
+  }
+
+  .meta-card {
+    padding: 8px 12px;
+  }
+
+  .markdown-content {
+    padding: 14px 16px;
+    max-height: calc(100vh - 150px);
   }
 
   .action-btn {
