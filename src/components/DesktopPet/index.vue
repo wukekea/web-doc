@@ -12,7 +12,20 @@ type PetState =
   | "crying"
   | "angry"
   | "fallen"
-  | "scared";
+  | "scared"
+  | "thinking"
+  | "smug"
+  | "shy"
+  | "confused"
+  | "hello"
+  | "sneeze"
+  | "yawn"
+  | "scratch"
+  | "celebrate"
+  | "peek"
+  | "chase"
+  | "hide"
+  | "play-dead";
 type PetDirection = "left" | "right";
 
 interface PetPosition {
@@ -49,6 +62,9 @@ const lastFootprintTime = ref(0);
 const lastFootprintWasLeft = ref(false);
 const footprintIdCounter = ref(0);
 
+// 鼠标位置（用于追逐）
+const mousePosition = ref<PetPosition>({ x: 0, y: 0 });
+
 // 宠物配置
 const PET_SIZE = 80;
 const JUMP_DURATION = 800;
@@ -65,6 +81,19 @@ const CRYING_DURATION = 3000;
 const ANGRY_DURATION = 2500;
 const FALLEN_DURATION = 2000;
 const SCARED_DURATION = 1500;
+const THINKING_DURATION = 4000;
+const SMUG_DURATION = 2500;
+const SHY_DURATION = 2000;
+const CONFUSED_DURATION = 2000;
+const HELLO_DURATION = 1500;
+const SNEEZE_DURATION = 1000;
+const YAWN_DURATION = 2000;
+const SCRATCH_DURATION = 2000;
+const CELEBRATE_DURATION = 3000;
+const PEEK_DURATION = 3000;
+const CHASE_DURATION = 5000;
+const HIDE_DURATION = 4000;
+const PLAY_DEAD_DURATION = 5000;
 
 // 当前主题
 const isDark = computed(() => appStore.theme === "dark");
@@ -140,7 +169,20 @@ function moveToRandomPosition() {
     petState.value === "crying" ||
     petState.value === "angry" ||
     petState.value === "fallen" ||
-    petState.value === "scared"
+    petState.value === "scared" ||
+    petState.value === "thinking" ||
+    petState.value === "smug" ||
+    petState.value === "shy" ||
+    petState.value === "confused" ||
+    petState.value === "hello" ||
+    petState.value === "sneeze" ||
+    petState.value === "yawn" ||
+    petState.value === "scratch" ||
+    petState.value === "celebrate" ||
+    petState.value === "peek" ||
+    petState.value === "chase" ||
+    petState.value === "hide" ||
+    petState.value === "play-dead"
   )
     return;
 
@@ -174,18 +216,40 @@ function changeState(newState: PetState) {
       stateTimer.value = window.setTimeout(() => {
         if (!isDragging.value) {
           const random = Math.random();
-          if (random < 0.15) {
+          if (random < 0.08) {
             changeState("sleeping");
-          } else if (random < 0.3) {
+          } else if (random < 0.15) {
             changeState("jumping");
-          } else if (random < 0.4) {
+          } else if (random < 0.2) {
             changeState("crying");
-          } else if (random < 0.5) {
+          } else if (random < 0.25) {
             changeState("angry");
-          } else if (random < 0.55) {
+          } else if (random < 0.3) {
             changeState("fallen");
-          } else if (random < 0.6) {
+          } else if (random < 0.35) {
             changeState("scared");
+          } else if (random < 0.4) {
+            changeState("thinking");
+          } else if (random < 0.45) {
+            changeState("smug");
+          } else if (random < 0.5) {
+            changeState("shy");
+          } else if (random < 0.55) {
+            changeState("confused");
+          } else if (random < 0.6) {
+            changeState("hello");
+          } else if (random < 0.65) {
+            changeState("sneeze");
+          } else if (random < 0.7) {
+            changeState("yawn");
+          } else if (random < 0.75) {
+            changeState("scratch");
+          } else if (random < 0.8) {
+            changeState("celebrate");
+          } else if (random < 0.85) {
+            changeState("peek");
+          } else if (random < 0.9) {
+            changeState("play-dead");
           } else {
             moveToRandomPosition();
           }
@@ -227,6 +291,71 @@ function changeState(newState: PetState) {
         changeState("idle");
       }, SCARED_DURATION);
       break;
+    case "thinking":
+      stateTimer.value = window.setTimeout(() => {
+        changeState("idle");
+      }, THINKING_DURATION);
+      break;
+    case "smug":
+      stateTimer.value = window.setTimeout(() => {
+        changeState("idle");
+      }, SMUG_DURATION);
+      break;
+    case "shy":
+      stateTimer.value = window.setTimeout(() => {
+        changeState("idle");
+      }, SHY_DURATION);
+      break;
+    case "confused":
+      stateTimer.value = window.setTimeout(() => {
+        changeState("idle");
+      }, CONFUSED_DURATION);
+      break;
+    case "hello":
+      stateTimer.value = window.setTimeout(() => {
+        changeState("idle");
+      }, HELLO_DURATION);
+      break;
+    case "sneeze":
+      setTimeout(() => {
+        changeState("idle");
+      }, SNEEZE_DURATION);
+      break;
+    case "yawn":
+      stateTimer.value = window.setTimeout(() => {
+        changeState("idle");
+      }, YAWN_DURATION);
+      break;
+    case "scratch":
+      stateTimer.value = window.setTimeout(() => {
+        changeState("idle");
+      }, SCRATCH_DURATION);
+      break;
+    case "celebrate":
+      stateTimer.value = window.setTimeout(() => {
+        changeState("idle");
+      }, CELEBRATE_DURATION);
+      break;
+    case "peek":
+      stateTimer.value = window.setTimeout(() => {
+        changeState("idle");
+      }, PEEK_DURATION);
+      break;
+    case "chase":
+      stateTimer.value = window.setTimeout(() => {
+        changeState("idle");
+      }, CHASE_DURATION);
+      break;
+    case "hide":
+      stateTimer.value = window.setTimeout(() => {
+        changeState("idle");
+      }, HIDE_DURATION);
+      break;
+    case "play-dead":
+      stateTimer.value = window.setTimeout(() => {
+        changeState("idle");
+      }, PLAY_DEAD_DURATION);
+      break;
   }
 }
 
@@ -237,7 +366,15 @@ function handlePetClick() {
 
   if (petState.value !== "sleeping") {
     // 随机触发不同反应
-    const reactions: PetState[] = ["happy", "scared", "fallen"];
+    const reactions: PetState[] = [
+      "happy",
+      "scared",
+      "fallen",
+      "smug",
+      "shy",
+      "celebrate",
+      "play-dead",
+    ];
     changeState(reactions[Math.floor(Math.random() * reactions.length)]);
   }
 }
@@ -247,7 +384,10 @@ function handleDragStart(e: MouseEvent) {
   if (
     petState.value === "sleeping" ||
     petState.value === "happy" ||
-    petState.value === "fallen"
+    petState.value === "fallen" ||
+    petState.value === "play-dead" ||
+    petState.value === "celebrate" ||
+    petState.value === "chase"
   )
     return;
 
@@ -325,7 +465,27 @@ function animate() {
   // 清理过期的脚印
   cleanupFootprints();
 
-  if (isVisible.value) {
+  // 追逐鼠标
+  if (petState.value === "chase" && isVisible.value) {
+    const dx = mousePosition.value.x - position.value.x - PET_SIZE / 2;
+    const dy = mousePosition.value.y - position.value.y - PET_SIZE / 2;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance > 5) {
+      const speed = 3;
+      const ratio = speed / distance;
+      position.value.x += dx * ratio;
+      position.value.y += dy * ratio;
+
+      // 根据移动方向设置朝向
+      petDirection.value = dx > 0 ? "right" : "left";
+
+      // 添加脚印
+      addFootprint(position.value.x, position.value.y, petDirection.value);
+    }
+  }
+
+  if (isVisible.value && petState.value !== "chase") {
     // 计算到目标位置的距离
     const dx = targetPosition.value.x - position.value.x;
     const dy = targetPosition.value.y - position.value.y;
@@ -408,10 +568,19 @@ onMounted(() => {
 
   // 添加事件监听
   window.addEventListener("resize", handleResize);
+  window.addEventListener("mousemove", handleMouseMove);
 
   // 暴露全局方法
   (window as any).togglePet = togglePet;
 });
+
+// 处理鼠标移动（用于追逐）
+function handleMouseMove(e: MouseEvent) {
+  mousePosition.value = {
+    x: e.clientX,
+    y: e.clientY,
+  };
+}
 
 // 清理
 onBeforeUnmount(() => {
@@ -423,6 +592,7 @@ onBeforeUnmount(() => {
   }
   window.removeEventListener("resize", handleResize);
   window.removeEventListener("mousemove", handleDragging);
+  window.removeEventListener("mousemove", handleMouseMove);
   window.removeEventListener("mouseup", handleDragEnd);
 });
 
@@ -573,6 +743,65 @@ defineExpose({
       <div class="scared-effects" v-if="petState === 'scared'">
         <span class="exclaim">❗</span>
         <span class="exclaim exclaim-2">❗</span>
+      </div>
+
+      <!-- 思考效果 -->
+      <div class="thinking-effects" v-if="petState === 'thinking'">
+        <span class="think-icon">💭</span>
+      </div>
+
+      <!-- 得意效果 -->
+      <div class="smug-effects" v-if="petState === 'smug'">
+        <span class="thumb-up">👍</span>
+      </div>
+
+      <!-- 害羞效果 -->
+      <div class="shy-effects" v-if="petState === 'shy'">
+        <span class="shy-icon">🫣</span>
+      </div>
+
+      <!-- 疑惑效果 -->
+      <div class="confused-effects" v-if="petState === 'confused'">
+        <span class="confused-icon">🤔</span>
+      </div>
+
+      <!-- 打招呼效果 -->
+      <div class="hello-effects" v-if="petState === 'hello'">
+        <span class="wave">👋</span>
+      </div>
+
+      <!-- 打喷嚏效果 -->
+      <div class="sneeze-effects" v-if="petState === 'sneeze'">
+        <span class="sneeze-cloud">💨</span>
+        <span class="sneeze-text">阿嚏!</span>
+      </div>
+
+      <!-- 打哈欠效果 -->
+      <div class="yawn-effects" v-if="petState === 'yawn'">
+        <span class="yawn-text">哈~</span>
+      </div>
+
+      <!-- 挠头效果 -->
+      <div class="scratch-effects" v-if="petState === 'scratch'">
+        <span class="scratch-icon">❓</span>
+      </div>
+
+      <!-- 跳跃庆祝效果 -->
+      <div class="celebrate-effects" v-if="petState === 'celebrate'">
+        <span class="confetti">🎉</span>
+        <span class="confetti confetti-2">🎊</span>
+        <span class="confetti confetti-3">✨</span>
+      </div>
+
+      <!-- 偷看效果 -->
+      <div class="peek-effects" v-if="petState === 'peek'">
+        <span class="peek-eyes">👀</span>
+      </div>
+
+      <!-- 装死效果 -->
+      <div class="play-dead-effects" v-if="petState === 'play-dead'">
+        <span class="soul">👻</span>
+        <span class="x-eyes">✖️✖️</span>
       </div>
     </div>
   </div>
@@ -1650,6 +1879,613 @@ defineExpose({
   50% {
     transform: translateY(-10px);
   }
+}
+
+/* ========================================
+   THINKING EFFECTS - 思考效果
+   ======================================== */
+.pet-thinking .pet-body {
+  animation: thinking-sway 2s ease-in-out infinite;
+}
+
+@keyframes thinking-sway {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+.pet-thinking .arm-left {
+  transform: rotate(-60deg) translateY(-10px);
+}
+
+.thinking-effects {
+  position: absolute;
+  top: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.think-icon {
+  font-size: 24px;
+  animation: think-float 2s ease-in-out infinite;
+}
+
+@keyframes think-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* ========================================
+   SMUG EFFECTS - 得意效果
+   ======================================== */
+.pet-smug .pet-body {
+  animation: smug-sway 1.5s ease-in-out infinite;
+}
+
+@keyframes smug-sway {
+  0%,
+  100% {
+    transform: rotate(-2deg) scale(1.02);
+  }
+  50% {
+    transform: rotate(2deg) scale(1.02);
+  }
+}
+
+.pet-smug .eye {
+  height: 6px;
+  border-radius: 0 0 50% 50%;
+}
+
+.pet-smug .mouth-smile {
+  width: 14px;
+  height: 7px;
+}
+
+.smug-effects {
+  position: absolute;
+  top: -30px;
+  right: -20px;
+  pointer-events: none;
+}
+
+.thumb-up {
+  font-size: 24px;
+  animation: thumb-bounce 0.5s ease-in-out infinite;
+}
+
+@keyframes thumb-bounce {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-15deg);
+  }
+}
+
+/* ========================================
+   SHY EFFECTS - 害羞效果
+   ======================================== */
+.pet-shy .pet-body {
+  animation: shy-tremble 0.3s ease-in-out infinite;
+}
+
+@keyframes shy-tremble {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+.pet-shy .eye {
+  height: 8px;
+  border-radius: 0 0 50% 50%;
+}
+
+.pet-shy .pet-cheek {
+  opacity: 0.9;
+  background: #f87171;
+  width: 14px;
+  height: 10px;
+}
+
+.pet-shy .arm-left {
+  transform: rotate(-45deg) translateX(5px);
+}
+
+.pet-shy .arm-right {
+  transform: rotate(45deg) translateX(-5px);
+}
+
+.shy-effects {
+  position: absolute;
+  top: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.shy-icon {
+  font-size: 22px;
+  animation: shy-blink 0.5s ease-in-out infinite;
+}
+
+@keyframes shy-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ========================================
+   CONFUSED EFFECTS - 疑惑效果
+   ======================================== */
+.pet-confused .pet-body {
+  animation: confused-tilt 1s ease-in-out infinite;
+}
+
+@keyframes confused-tilt {
+  0%,
+  100% {
+    transform: rotate(-10deg);
+  }
+  50% {
+    transform: rotate(-5deg);
+  }
+}
+
+.pet-confused .eye {
+  width: 16px;
+  height: 12px;
+}
+
+.confused-effects {
+  position: absolute;
+  top: -35px;
+  right: -10px;
+  pointer-events: none;
+}
+
+.confused-icon {
+  font-size: 24px;
+  animation: confused-bounce 0.5s ease-in-out infinite;
+}
+
+@keyframes confused-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* ========================================
+   HELLO EFFECTS - 打招呼效果
+   ======================================== */
+.pet-hello .pet-body {
+  animation: hello-sway 0.5s ease-in-out infinite;
+}
+
+@keyframes hello-sway {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+.pet-hello .mouth-smile {
+  width: 14px;
+  height: 7px;
+}
+
+.pet-hello .arm-right {
+  animation: wave-hand 0.3s ease-in-out infinite;
+}
+
+@keyframes wave-hand {
+  0%,
+  100% {
+    transform: rotate(-60deg);
+  }
+  50% {
+    transform: rotate(-30deg);
+  }
+}
+
+.hello-effects {
+  position: absolute;
+  top: -20px;
+  right: -25px;
+  pointer-events: none;
+}
+
+.wave {
+  font-size: 26px;
+  animation: wave-animation 0.5s ease-in-out infinite;
+}
+
+@keyframes wave-animation {
+  0%,
+  100% {
+    transform: rotate(-10deg);
+  }
+  50% {
+    transform: rotate(20deg);
+  }
+}
+
+/* ========================================
+   SNEEZE EFFECTS - 打喷嚏效果
+   ======================================== */
+.pet-sneeze .pet-body {
+  animation: sneeze-forward 0.2s ease-in-out infinite;
+}
+
+@keyframes sneeze-forward {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+}
+
+.pet-sneeze .eye {
+  transform: scaleY(0.1);
+}
+
+.pet-sneeze .mouth-smile {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 3px solid v-bind("petColors.eyes");
+}
+
+.sneeze-effects {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.sneeze-cloud {
+  font-size: 24px;
+  animation: sneeze-puff 0.5s ease-out infinite;
+}
+
+.sneeze-text {
+  font-size: 12px;
+  font-weight: bold;
+  color: #60a5fa;
+}
+
+@keyframes sneeze-puff {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+}
+
+/* ========================================
+   YAWN EFFECTS - 打哈欠效果
+   ======================================== */
+.pet-yawn .pet-body {
+  animation: yawn-stretch 2s ease-in-out infinite;
+}
+
+@keyframes yawn-stretch {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.pet-yawn .eye {
+  transform: scaleY(0.3);
+}
+
+.pet-yawn .mouth-smile {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 3px solid v-bind("petColors.eyes");
+}
+
+.pet-yawn .arm-left {
+  transform: rotate(-60deg) translateY(-5px);
+}
+
+.pet-yawn .arm-right {
+  transform: rotate(60deg) translateY(-5px);
+}
+
+.yawn-effects {
+  position: absolute;
+  top: -25px;
+  right: -15px;
+  pointer-events: none;
+}
+
+.yawn-text {
+  font-size: 14px;
+  animation: yawn-float 2s ease-in-out infinite;
+}
+
+@keyframes yawn-float {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+
+/* ========================================
+   SCRATCH EFFECTS - 挠头效果
+   ======================================== */
+.pet-scratch .pet-body {
+  animation: scratch-tilt 0.3s ease-in-out infinite;
+}
+
+@keyframes scratch-tilt {
+  0%,
+  100% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(-8deg);
+  }
+}
+
+.pet-scratch .eye {
+  transform: scaleY(0.5);
+}
+
+.pet-scratch .arm-left {
+  transform: rotate(-80deg) translateX(15px) translateY(-25px);
+}
+
+.scratch-effects {
+  position: absolute;
+  top: -35px;
+  right: -5px;
+  pointer-events: none;
+}
+
+.scratch-icon {
+  font-size: 20px;
+  animation: scratch-bounce 0.3s ease-in-out infinite;
+}
+
+@keyframes scratch-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* ========================================
+   CELEBRATE EFFECTS - 跳跃庆祝效果
+   ======================================== */
+.pet-celebrate .pet-body {
+  animation: celebrate-jump 0.4s ease-in-out infinite;
+}
+
+@keyframes celebrate-jump {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-20px) scale(0.95);
+  }
+}
+
+.pet-celebrate .eye {
+  height: 8px;
+  border-radius: 0 0 50% 50%;
+}
+
+.pet-celebrate .mouth-smile {
+  width: 16px;
+  height: 8px;
+}
+
+.pet-celebrate .arm-left {
+  animation: celebrate-arm-left 0.4s ease-in-out infinite;
+}
+
+.pet-celebrate .arm-right {
+  animation: celebrate-arm-right 0.4s ease-in-out infinite;
+}
+
+@keyframes celebrate-arm-left {
+  0%,
+  100% {
+    transform: rotate(20deg);
+  }
+  50% {
+    transform: rotate(-60deg);
+  }
+}
+
+@keyframes celebrate-arm-right {
+  0%,
+  100% {
+    transform: rotate(-20deg);
+  }
+  50% {
+    transform: rotate(60deg);
+  }
+}
+
+.celebrate-effects {
+  position: absolute;
+  inset: -30px;
+  pointer-events: none;
+}
+
+.confetti {
+  position: absolute;
+  font-size: 20px;
+  animation: confetti-fall 1.5s ease-out infinite;
+}
+
+.confetti-2 {
+  left: 50%;
+  animation-delay: 0.2s;
+}
+
+.confetti-3 {
+  right: 0;
+  animation-delay: 0.4s;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-20px) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(30px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* ========================================
+   PEEK EFFECTS - 偷看效果
+   ======================================== */
+.pet-peek .pet-body {
+  transform: scaleX(0.6) translateX(25%);
+}
+
+.pet-peek .eye {
+  animation: peek-look 1s ease-in-out infinite;
+}
+
+@keyframes peek-look {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+
+.peek-effects {
+  position: absolute;
+  top: -30px;
+  left: 60%;
+  pointer-events: none;
+}
+
+.peek-eyes {
+  font-size: 24px;
+  animation: peek-blink 0.5s ease-in-out infinite;
+}
+
+@keyframes peek-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* ========================================
+   PLAY-DEAD EFFECTS - 装死效果
+   ======================================== */
+.pet-play-dead .pet-body {
+  transform: rotate(-90deg) translateY(5px);
+}
+
+.pet-play-dead .pet-shadow {
+  opacity: 0.3;
+}
+
+.play-dead-effects {
+  position: absolute;
+  inset: -20px;
+  pointer-events: none;
+}
+
+.soul {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 24px;
+  animation: soul-float 2s ease-in-out infinite;
+}
+
+@keyframes soul-float {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-10px);
+  }
+}
+
+.x-eyes {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  letter-spacing: 4px;
 }
 
 /* ========================================
