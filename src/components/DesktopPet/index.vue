@@ -11,6 +11,16 @@ interface PetPosition {
   y: number;
 }
 
+// 脚印数据接口
+interface Footprint {
+  id: number;
+  x: number;
+  y: number;
+  isLeft: boolean;
+  direction: PetDirection;
+  createdAt: number;
+}
+
 const appStore = useAppStore();
 
 // 宠物状态
@@ -24,6 +34,12 @@ const dragOffset = ref<PetPosition>({ x: 0, y: 0 });
 const animationFrameId = ref<number | null>(null);
 const stateTimer = ref<number | null>(null);
 
+// 脚印状态
+const footprints = ref<Footprint[]>([]);
+const lastFootprintTime = ref(0);
+const lastFootprintWasLeft = ref(false);
+const footprintIdCounter = ref(0);
+
 // 宠物配置
 const PET_SIZE = 80;
 const JUMP_DURATION = 800;
@@ -31,6 +47,9 @@ const WALK_SPEED = 2; // 固定移动速度（像素/帧）
 const IDLE_DURATION = 4000;
 const SLEEP_DURATION = 8000;
 const HAPPY_DURATION = 1500;
+const FOOTPRINT_INTERVAL = 150; // 脚印生成间隔（毫秒）
+const FOOTPRINT_LIFETIME = 4000; // 脚印存活时间（毫秒）
+const MAX_FOOTPRINTS = 20; // 最大脚印数量
 
 // 当前主题
 const isDark = computed(() => appStore.theme === "dark");
@@ -43,7 +62,54 @@ const petColors = computed(() => ({
   eyes: isDark.value ? "#fbbf24" : "#1f2937",
   cheeks: isDark.value ? "#f472b6" : "#fda4af",
   shadow: isDark.value ? "rgba(167, 139, 250, 0.3)" : "rgba(139, 92, 246, 0.2)",
+  footprint: isDark.value
+    ? "rgba(167, 139, 250, 0.4)"
+    : "rgba(139, 92, 246, 0.3)",
 }));
+
+// 添加脚印
+function addFootprint(x: number, y: number, direction: PetDirection) {
+  const now = Date.now();
+  if (now - lastFootprintTime.value < FOOTPRINT_INTERVAL) return;
+
+  lastFootprintTime.value = now;
+  lastFootprintWasLeft.value = !lastFootprintWasLeft.value;
+
+  // 计算脚印位置（在宠物底部）
+  const footprintX = x + PET_SIZE / 2 + (lastFootprintWasLeft.value ? -15 : 15);
+  const footprintY = y + PET_SIZE - 5;
+
+  const newFootprint: Footprint = {
+    id: footprintIdCounter.value++,
+    x: footprintX,
+    y: footprintY,
+    isLeft: lastFootprintWasLeft.value,
+    direction: direction,
+    createdAt: now,
+  };
+
+  footprints.value.push(newFootprint);
+
+  // 限制脚印数量
+  if (footprints.value.length > MAX_FOOTPRINTS) {
+    footprints.value.shift();
+  }
+}
+
+// 清理过期的脚印
+function cleanupFootprints() {
+  const now = Date.now();
+  footprints.value = footprints.value.filter(
+    (fp) => now - fp.createdAt < FOOTPRINT_LIFETIME,
+  );
+}
+
+// 获取脚印透明度
+function getFootprintOpacity(footprint: Footprint): number {
+  const age = Date.now() - footprint.createdAt;
+  const remaining = FOOTPRINT_LIFETIME - age;
+  return Math.max(0, remaining / FOOTPRINT_LIFETIME);
+}
 
 // 随机移动到新位置
 function moveToRandomPosition() {
@@ -157,6 +223,9 @@ function handleDragging(e: MouseEvent) {
     y: mouseY - dragOffset.value.y,
   };
 
+  // 添加脚印
+  addFootprint(position.value.x, position.value.y, petDirection.value);
+
   // 同时更新目标位置，防止动画循环将宠物移回原位置
   targetPosition.value = { ...position.value };
 
@@ -189,6 +258,9 @@ function handleDragEnd() {
 
 // 动画循环
 function animate() {
+  // 清理过期的脚印
+  cleanupFootprints();
+
   if (isVisible.value) {
     // 计算到目标位置的距离
     const dx = targetPosition.value.x - position.value.x;
@@ -207,6 +279,9 @@ function animate() {
 
       // 根据移动方向设置朝向
       petDirection.value = dx > 0 ? "right" : "left";
+
+      // 添加脚印
+      addFootprint(position.value.x, position.value.y, petDirection.value);
     } else if (
       distance <= WALK_SPEED &&
       petState.value === "walking" &&
@@ -305,6 +380,34 @@ defineExpose({
     class="desktop-pet"
     :class="[`pet-${petState}`, `pet-${petDirection}`]"
   >
+    <!-- 脚印容器 -->
+    <div class="footprints-container">
+      <div
+        v-for="footprint in footprints"
+        :key="footprint.id"
+        class="footprint"
+        :class="[
+          footprint.isLeft ? 'footprint-left' : 'footprint-right',
+          `footprint-${footprint.direction}`,
+        ]"
+        :style="{
+          left: `${footprint.x}px`,
+          top: `${footprint.y}px`,
+          opacity: getFootprintOpacity(footprint),
+        }"
+      >
+        <svg viewBox="0 0 24 24" class="footprint-svg">
+          <path
+            d="M12 2C9.5 2 7.5 4.5 7.5 7.5C7.5 10.5 9.5 13 12 13C14.5 13 16.5 10.5 16.5 7.5C16.5 4.5 14.5 2 12 2Z"
+            fill="currentColor"
+          />
+          <ellipse cx="7" cy="17" rx="3" ry="2" fill="currentColor" />
+          <ellipse cx="12" cy="19" rx="3.5" ry="2.5" fill="currentColor" />
+          <ellipse cx="17" cy="17" rx="3" ry="2" fill="currentColor" />
+        </svg>
+      </div>
+    </div>
+
     <!-- 宠物容器 -->
     <div
       class="pet-container"
@@ -392,6 +495,48 @@ defineExpose({
   position: fixed;
   z-index: 1000;
   pointer-events: none;
+}
+
+/* ========================================
+   FOOTPRINTS - 脚印轨迹
+   ======================================== */
+.footprints-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.footprint {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  transform: translate(-50%, -100%);
+  transition: opacity 0.1s linear;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.footprint-svg {
+  width: 100%;
+  height: 100%;
+  color: v-bind("petColors.footprint");
+}
+
+/* 左脚印旋转 */
+.footprint-left.footprint-right {
+  transform: translate(-50%, -100%) rotate(-15deg);
+}
+
+.footprint-left.footprint-left {
+  transform: translate(-50%, -100%) rotate(15deg);
+}
+
+/* 右脚印旋转 */
+.footprint-right.footprint-right {
+  transform: translate(-50%, -100%) rotate(15deg);
+}
+
+.footprint-right.footprint-left {
+  transform: translate(-50%, -100%) rotate(-15deg);
 }
 
 .pet-container {
