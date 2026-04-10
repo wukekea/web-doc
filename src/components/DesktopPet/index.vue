@@ -3,7 +3,16 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
 import { useAppStore } from "@/stores/app";
 
 // 宠物状态类型
-type PetState = "idle" | "walking" | "jumping" | "sleeping" | "happy";
+type PetState =
+  | "idle"
+  | "walking"
+  | "jumping"
+  | "sleeping"
+  | "happy"
+  | "crying"
+  | "angry"
+  | "fallen"
+  | "scared";
 type PetDirection = "left" | "right";
 
 interface PetPosition {
@@ -51,21 +60,33 @@ const FOOTPRINT_INTERVAL = 150; // 脚印生成间隔（毫秒）
 const FOOTPRINT_LIFETIME = 4000; // 脚印存活时间（毫秒）
 const MAX_FOOTPRINTS = 20; // 最大脚印数量
 
+// 新状态持续时间
+const CRYING_DURATION = 3000;
+const ANGRY_DURATION = 2500;
+const FALLEN_DURATION = 2000;
+const SCARED_DURATION = 1500;
+
 // 当前主题
 const isDark = computed(() => appStore.theme === "dark");
 
 // 宠物颜色 - 根据主题变化
-const petColors = computed(() => ({
-  body: isDark.value ? "#a78bfa" : "#8b5cf6",
-  bodyGradient: isDark.value ? "#c4b5fd" : "#a78bfa",
-  face: isDark.value ? "#1f2937" : "#ffffff",
-  eyes: isDark.value ? "#fbbf24" : "#1f2937",
-  cheeks: isDark.value ? "#f472b6" : "#fda4af",
-  shadow: isDark.value ? "rgba(167, 139, 250, 0.3)" : "rgba(139, 92, 246, 0.2)",
-  footprint: isDark.value
-    ? "rgba(167, 139, 250, 0.4)"
-    : "rgba(139, 92, 246, 0.3)",
-}));
+const petColors = computed(() => {
+  const isAngry = petState.value === "angry";
+  return {
+    body: isAngry ? "#ef4444" : isDark.value ? "#a78bfa" : "#8b5cf6",
+    bodyGradient: isAngry ? "#f87171" : isDark.value ? "#c4b5fd" : "#a78bfa",
+    face: isDark.value ? "#1f2937" : "#ffffff",
+    eyes: isDark.value ? "#fbbf24" : "#1f2937",
+    cheeks: isDark.value ? "#f472b6" : "#fda4af",
+    shadow: isDark.value
+      ? "rgba(167, 139, 250, 0.3)"
+      : "rgba(139, 92, 246, 0.2)",
+    footprint: isDark.value
+      ? "rgba(167, 139, 250, 0.4)"
+      : "rgba(139, 92, 246, 0.3)",
+    angryFace: "#7f1d1d",
+  };
+});
 
 // 添加脚印
 function addFootprint(x: number, y: number, direction: PetDirection) {
@@ -113,7 +134,15 @@ function getFootprintOpacity(footprint: Footprint): number {
 
 // 随机移动到新位置
 function moveToRandomPosition() {
-  if (petState.value === "sleeping" || petState.value === "happy") return;
+  if (
+    petState.value === "sleeping" ||
+    petState.value === "happy" ||
+    petState.value === "crying" ||
+    petState.value === "angry" ||
+    petState.value === "fallen" ||
+    petState.value === "scared"
+  )
+    return;
 
   const maxX = window.innerWidth - PET_SIZE;
   const maxY = window.innerHeight - PET_SIZE - 20;
@@ -145,10 +174,18 @@ function changeState(newState: PetState) {
       stateTimer.value = window.setTimeout(() => {
         if (!isDragging.value) {
           const random = Math.random();
-          if (random < 0.3) {
+          if (random < 0.15) {
             changeState("sleeping");
-          } else if (random < 0.6) {
+          } else if (random < 0.3) {
             changeState("jumping");
+          } else if (random < 0.4) {
+            changeState("crying");
+          } else if (random < 0.5) {
+            changeState("angry");
+          } else if (random < 0.55) {
+            changeState("fallen");
+          } else if (random < 0.6) {
+            changeState("scared");
           } else {
             moveToRandomPosition();
           }
@@ -170,6 +207,26 @@ function changeState(newState: PetState) {
         changeState("idle");
       }, HAPPY_DURATION);
       break;
+    case "crying":
+      stateTimer.value = window.setTimeout(() => {
+        changeState("idle");
+      }, CRYING_DURATION);
+      break;
+    case "angry":
+      stateTimer.value = window.setTimeout(() => {
+        changeState("idle");
+      }, ANGRY_DURATION);
+      break;
+    case "fallen":
+      setTimeout(() => {
+        changeState("idle");
+      }, FALLEN_DURATION);
+      break;
+    case "scared":
+      stateTimer.value = window.setTimeout(() => {
+        changeState("idle");
+      }, SCARED_DURATION);
+      break;
   }
 }
 
@@ -179,13 +236,20 @@ function handlePetClick() {
   if (isDragging.value) return;
 
   if (petState.value !== "sleeping") {
-    changeState("happy");
+    // 随机触发不同反应
+    const reactions: PetState[] = ["happy", "scared", "fallen"];
+    changeState(reactions[Math.floor(Math.random() * reactions.length)]);
   }
 }
 
 // 开始拖动
 function handleDragStart(e: MouseEvent) {
-  if (petState.value === "sleeping" || petState.value === "happy") return;
+  if (
+    petState.value === "sleeping" ||
+    petState.value === "happy" ||
+    petState.value === "fallen"
+  )
+    return;
 
   isDragging.value = true;
 
@@ -434,6 +498,12 @@ defineExpose({
 
         <!-- 脸部 -->
         <div class="pet-face">
+          <!-- 眉毛（生气时显示） -->
+          <div class="pet-brows">
+            <div class="brow brow-left"></div>
+            <div class="brow brow-right"></div>
+          </div>
+
           <!-- 眼睛 -->
           <div class="pet-eyes">
             <div class="eye eye-left">
@@ -454,11 +524,19 @@ defineExpose({
           <div class="pet-mouth">
             <div class="mouth-smile"></div>
             <div class="mouth-o"></div>
+            <div class="mouth-sad"></div>
+            <div class="mouth-angry"></div>
           </div>
 
           <!-- 腮红 -->
           <div class="pet-cheek cheek-left"></div>
           <div class="pet-cheek cheek-right"></div>
+
+          <!-- 眼泪（大哭时显示） -->
+          <div class="tears" v-if="petState === 'crying'">
+            <div class="tear tear-left"></div>
+            <div class="tear tear-right"></div>
+          </div>
         </div>
 
         <!-- 手臂 -->
@@ -482,6 +560,19 @@ defineExpose({
         <div class="heart heart-1">❤️</div>
         <div class="heart heart-2">✨</div>
         <div class="heart heart-3">💖</div>
+      </div>
+
+      <!-- 晕眩效果（摔倒时显示） -->
+      <div class="dizzy-effects" v-if="petState === 'fallen'">
+        <span class="dizzy-star">⭐</span>
+        <span class="dizzy-star star-2">💫</span>
+        <span class="dizzy-star star-3">✴️</span>
+      </div>
+
+      <!-- 惊吓效果 -->
+      <div class="scared-effects" v-if="petState === 'scared'">
+        <span class="exclaim">❗</span>
+        <span class="exclaim exclaim-2">❗</span>
       </div>
     </div>
   </div>
@@ -688,6 +779,80 @@ defineExpose({
   }
 }
 
+/* 大哭动画 */
+.pet-crying .pet-body {
+  animation: crying 0.5s ease-in-out infinite;
+}
+
+@keyframes crying {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+}
+
+/* 生气动画 */
+.pet-angry .pet-body {
+  animation: angry 0.3s ease-in-out infinite;
+}
+
+@keyframes angry {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.05) rotate(-2deg);
+  }
+  75% {
+    transform: scale(1.05) rotate(2deg);
+  }
+}
+
+/* 摔倒动画 */
+.pet-fallen .pet-body {
+  animation: fallen 2s ease-in-out;
+}
+
+@keyframes fallen {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  20% {
+    transform: scale(1.1) rotate(15deg);
+  }
+  40% {
+    transform: scale(0.9) rotate(-10deg);
+  }
+  60% {
+    transform: scale(1.05) rotate(8deg);
+  }
+  80% {
+    transform: scale(0.95) rotate(-5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* 惊吓动画 */
+.pet-scared .pet-body {
+  animation: scared 0.1s ease-in-out infinite;
+}
+
+@keyframes scared {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.9);
+  }
+}
+
 /* ========================================
    PET EARS
    ======================================== */
@@ -758,9 +923,46 @@ defineExpose({
 .pet-face {
   position: absolute;
   inset: 0;
+}
+
+/* 眉毛 */
+.pet-brows {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  align-items: center;
-  justify-content: center;
+  gap: 16px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.pet-angry .pet-brows {
+  opacity: 1;
+}
+
+.brow {
+  width: 8px;
+  height: 4px;
+  background: v-bind("petColors.eyes");
+  border-radius: 2px;
+  transition: transform 0.2s ease;
+}
+
+.brow-left {
+  transform: rotate(-20deg);
+}
+
+.brow-right {
+  transform: rotate(20deg);
+}
+
+.pet-scared .brow-left {
+  transform: translateY(-2px) rotate(-10deg);
+}
+
+.pet-scared .brow-right {
+  transform: translateY(-2px) rotate(10deg);
 }
 
 /* 眼睛 */
@@ -842,6 +1044,34 @@ defineExpose({
   border-radius: 0 0 50% 50%;
 }
 
+/* 大哭时眼睛变化 */
+.pet-crying .eye {
+  height: 10px;
+  width: 12px;
+  border-radius: 50% 50% 0 0;
+}
+
+/* 生气时眼睛变化 */
+.pet-angry .eye {
+  height: 10px;
+  width: 16px;
+  border-radius: 50%;
+  transform: scaleY(0.8);
+}
+
+/* 惊吓时眼睛变化 */
+.pet-scared .eye {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  transform: scale(1.2);
+}
+
+/* 摔倒时眼睛变化 */
+.pet-fallen .eye {
+  transform: rotate(180deg);
+}
+
 /* 嘴巴 */
 .pet-mouth {
   position: absolute;
@@ -866,10 +1096,81 @@ defineExpose({
   border-radius: 50%;
 }
 
+/* 难过嘴巴 */
+.mouth-sad {
+  display: none;
+  width: 12px;
+  height: 6px;
+  border: none;
+  border-top: 3px solid v-bind("petColors.eyes");
+  border-radius: 50% 50% 0 0;
+}
+
+/* 生气嘴巴 */
+.mouth-angry {
+  display: none;
+  width: 14px;
+  height: 4px;
+  border: none;
+  border: 3px solid v-bind("petColors.eyes");
+  border-radius: 50%;
+}
+
 /* 开心时嘴巴变化 */
 .pet-happy .mouth-smile {
   width: 16px;
   height: 8px;
+}
+
+/* 大哭时嘴巴变化 */
+.pet-crying .mouth-smile {
+  display: none;
+}
+
+.pet-crying .mouth-sad {
+  display: block;
+  width: 14px;
+  height: 8px;
+  animation: mouth-cry 0.5s ease-in-out infinite;
+}
+
+@keyframes mouth-cry {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(2px);
+  }
+}
+
+/* 生气时嘴巴变化 */
+.pet-angry .mouth-smile {
+  display: none;
+}
+
+.pet-angry .mouth-angry {
+  display: block;
+}
+
+/* 惊吓时嘴巴变化 */
+.pet-scared .mouth-smile {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 3px solid v-bind("petColors.eyes");
+  border-bottom: none;
+}
+
+/* 摔倒时嘴巴变化 */
+.pet-fallen .mouth-smile {
+  display: none;
+}
+
+.pet-fallen .mouth-o {
+  display: block;
+  width: 10px;
+  height: 12px;
 }
 
 /* 腮红 */
@@ -897,6 +1198,68 @@ defineExpose({
   opacity: 0.9;
   width: 12px;
   height: 8px;
+}
+
+/* 大哭时腮红 */
+.pet-crying .pet-cheek {
+  opacity: 0.8;
+  width: 14px;
+  height: 10px;
+  animation: cheek-tremble 0.5s ease-in-out infinite;
+}
+
+@keyframes cheek-tremble {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* 生气时腮红变成红色 */
+.pet-angry .pet-cheek {
+  background: #ef4444;
+  opacity: 0.7;
+}
+
+/* 眼泪 */
+.tears {
+  position: absolute;
+  top: 35px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 20px;
+}
+
+.tear {
+  width: 6px;
+  height: 12px;
+  background: #60a5fa;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  animation: tear-fall 0.8s ease-in infinite;
+  opacity: 0.8;
+}
+
+.tear-left {
+  animation-delay: 0s;
+}
+
+.tear-right {
+  animation-delay: 0.4s;
+}
+
+@keyframes tear-fall {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(25px) scale(0.5);
+    opacity: 0;
+  }
 }
 
 /* ========================================
@@ -977,6 +1340,84 @@ defineExpose({
   }
   50% {
     transform: rotate(30deg);
+  }
+}
+
+/* 大哭时手臂遮脸 */
+.pet-crying .arm-left {
+  animation: arm-cry-left 0.5s ease-in-out infinite;
+  transform: rotate(-60deg) translateX(10px);
+}
+
+.pet-crying .arm-right {
+  animation: arm-cry-right 0.5s ease-in-out infinite;
+  transform: rotate(60deg) translateX(-10px);
+}
+
+@keyframes arm-cry-left {
+  0%,
+  100% {
+    transform: rotate(-60deg) translateX(10px);
+  }
+  50% {
+    transform: rotate(-70deg) translateX(12px);
+  }
+}
+
+@keyframes arm-cry-right {
+  0%,
+  100% {
+    transform: rotate(60deg) translateX(-10px);
+  }
+  50% {
+    transform: rotate(70deg) translateX(-12px);
+  }
+}
+
+/* 生气时手臂叉腰 */
+.pet-angry .arm-left {
+  transform: rotate(-45deg) translateX(5px);
+}
+
+.pet-angry .arm-right {
+  transform: rotate(45deg) translateX(-5px);
+}
+
+/* 摔倒时手臂散开 */
+.pet-fallen .arm-left {
+  transform: rotate(-80deg) translateY(-10px);
+}
+
+.pet-fallen .arm-right {
+  transform: rotate(80deg) translateY(-10px);
+}
+
+/* 惊吓时手臂举起 */
+.pet-scared .arm-left {
+  animation: arm-scared-left 0.1s ease-in-out infinite;
+}
+
+.pet-scared .arm-right {
+  animation: arm-scared-right 0.1s ease-in-out infinite;
+}
+
+@keyframes arm-scared-left {
+  0%,
+  100% {
+    transform: rotate(-60deg);
+  }
+  50% {
+    transform: rotate(-50deg);
+  }
+}
+
+@keyframes arm-scared-right {
+  0%,
+  100% {
+    transform: rotate(60deg);
+  }
+  50% {
+    transform: rotate(50deg);
   }
 }
 
@@ -1128,6 +1569,86 @@ defineExpose({
   100% {
     opacity: 0;
     transform: translateY(-30px) scale(1.2);
+  }
+}
+
+/* ========================================
+   DIZZY EFFECTS - 晕眩效果
+   ======================================== */
+.dizzy-effects {
+  position: absolute;
+  inset: -30px;
+  pointer-events: none;
+}
+
+.dizzy-star {
+  position: absolute;
+  font-size: 20px;
+  animation: dizzy-spin 1s linear infinite;
+  opacity: 0;
+}
+
+.star-2 {
+  top: -20px;
+  left: 50%;
+  animation-delay: 0.3s;
+}
+
+.star-3 {
+  top: 0;
+  right: -25px;
+  animation-delay: 0.6s;
+}
+
+.dizzy-star:first-child {
+  top: -15px;
+  left: -25px;
+}
+
+@keyframes dizzy-spin {
+  0% {
+    opacity: 0;
+    transform: rotate(0deg) scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: rotate(180deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(360deg) scale(0.8);
+  }
+}
+
+/* ========================================
+   SCARED EFFECTS - 惊吓效果
+   ======================================== */
+.scared-effects {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  display: flex;
+  gap: 20px;
+}
+
+.exclaim {
+  font-size: 24px;
+  animation: exclaim-bounce 0.3s ease-in-out infinite;
+}
+
+.exclaim-2 {
+  animation-delay: 0.15s;
+}
+
+@keyframes exclaim-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
   }
 }
 
