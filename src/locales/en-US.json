@@ -17,6 +17,10 @@
     "zh": "中文",
     "en": "English"
   },
+  "pet": {
+    "name": "Cloudy",
+    "toggle": "Show/Hide Pet"
+  },
   "editor": {
     "title": "Edit Note",
     "titleLabel": "Title",

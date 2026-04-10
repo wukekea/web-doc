@@ -17,6 +17,10 @@
     "zh": "中文",
     "en": "English"
   },
+  "pet": {
+    "name": "小云朵",
+    "toggle": "显示/隐藏宠物"
+  },
   "editor": {
     "title": "编辑笔记",
     "titleLabel": "标题",

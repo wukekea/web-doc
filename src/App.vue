@@ -7,6 +7,7 @@ import Toolbar from "@/components/Toolbar/index.vue";
 import NoteList from "@/components/NoteList/index.vue";
 import Editor from "@/components/Editor/index.vue";
 import NoteContent from "@/components/NoteContent/index.vue";
+import DesktopPet from "@/components/DesktopPet/index.vue";
 
 const { locale, t } = useI18n();
 const appStore = useAppStore();
@@ -123,6 +124,9 @@ const activeNoteId = computed(() => previewNoteId.value);
       @close="handleCloseEditor"
       @delete="handleDelete"
     />
+
+    <!-- 桌面宠物 -->
+    <DesktopPet />
   </div>
 </template>
 

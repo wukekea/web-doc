@@ -10,6 +10,13 @@ function toggleLocale() {
   locale.value = newLocale;
   appStore.setLocale(newLocale);
 }
+
+function togglePet() {
+  const petEl = document.querySelector(".desktop-pet");
+  if (petEl) {
+    petEl.classList.toggle("hidden");
+  }
+}
 </script>
 
 <template>
@@ -53,6 +60,32 @@ function toggleLocale() {
 
     <!-- 右侧：操作按钮组 -->
     <div class="toolbar-actions">
+      <!-- 宠物切换 -->
+      <button
+        class="action-btn pet-btn"
+        @click="togglePet"
+        :title="t('pet.toggle')"
+      >
+        <svg
+          class="btn-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <path
+            d="M12 8c-1.5 0-2.5-1-2.5-2.5S10.5 3 12 3s2.5 1 2.5 2.5S13.5 8 12 8z"
+          />
+          <path
+            d="M16.5 12c0 2.5-2 4.5-4.5 4.5S7.5 14.5 7.5 12c0-1.5 1-3 2.5-3.5.5-2 2-3.5 4-3.5s3.5 1.5 4 3.5c1.5.5 2.5 2 2.5 3.5z"
+          />
+          <circle cx="10" cy="11" r="0.5" />
+          <circle cx="14" cy="11" r="0.5" />
+          <path d="M11 13.5c0.5 0.5 1.5 0.5 2 0" />
+        </svg>
+        <span class="btn-label">{{ t("pet.name") }}</span>
+      </button>
+
       <!-- 语言切换 -->
       <button
         class="action-btn language-btn"
@@ -271,7 +304,8 @@ function toggleLocale() {
   z-index: 1;
 }
 
-.language-btn .btn-label {
+.language-btn .btn-label,
+.pet-btn .btn-label {
   font-weight: 600;
   color: var(--accent-primary);
   position: relative;
