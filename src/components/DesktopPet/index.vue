@@ -27,7 +27,7 @@ const stateTimer = ref<number | null>(null);
 // 宠物配置
 const PET_SIZE = 80;
 const JUMP_DURATION = 800;
-const WALK_DURATION = 3000;
+const WALK_SPEED = 2; // 固定移动速度（像素/帧）
 const IDLE_DURATION = 4000;
 const SLEEP_DURATION = 8000;
 const HAPPY_DURATION = 1500;
@@ -62,13 +62,6 @@ function moveToRandomPosition() {
     targetPosition.value.x > position.value.x ? "right" : "left";
 
   petState.value = "walking";
-
-  // 移动完成后进入空闲状态
-  setTimeout(() => {
-    if (petState.value === "walking") {
-      changeState("idle");
-    }
-  }, WALK_DURATION);
 }
 
 // 改变宠物状态
@@ -197,14 +190,32 @@ function handleDragEnd() {
 // 动画循环
 function animate() {
   if (isVisible.value) {
-    // 平滑移动到目标位置
+    // 计算到目标位置的距离
     const dx = targetPosition.value.x - position.value.x;
     const dy = targetPosition.value.y - position.value.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    if (distance > 5) {
-      position.value.x += dx * 0.05;
-      position.value.y += dy * 0.05;
+    if (
+      distance > WALK_SPEED &&
+      petState.value === "walking" &&
+      !isDragging.value
+    ) {
+      // 固定速度移动
+      const ratio = WALK_SPEED / distance;
+      position.value.x += dx * ratio;
+      position.value.y += dy * ratio;
+
+      // 根据移动方向设置朝向
+      petDirection.value = dx > 0 ? "right" : "left";
+    } else if (
+      distance <= WALK_SPEED &&
+      petState.value === "walking" &&
+      !isDragging.value
+    ) {
+      // 到达目标位置，停止行走状态
+      position.value.x = targetPosition.value.x;
+      position.value.y = targetPosition.value.y;
+      changeState("idle");
     }
   }
 
