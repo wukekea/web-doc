@@ -112,7 +112,13 @@ function handleEdit() {
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 class="header-title">{{ title || "无标题" }}</h1>
+        <div class="header-text">
+          <h1 class="header-title">{{ title || "无标题" }}</h1>
+          <p v-if="currentNote" class="header-time">
+            {{ formatDateTime(currentNote.createdAt) }} ·
+            {{ formatTime(currentNote.updatedAt) }}
+          </p>
+        </div>
       </div>
       <div class="header-right">
         <div class="header-divider"></div>
@@ -148,51 +154,6 @@ function handleEdit() {
 
     <!-- 内容区 -->
     <div class="content-body">
-      <!-- 元信息卡片 -->
-      <div v-if="currentNote" class="meta-card">
-        <div class="meta-item">
-          <div class="meta-icon-wrapper created-icon">
-            <svg
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-            >
-              <circle cx="8" cy="8" r="6" />
-              <path d="M8 4v4M8 8h3" />
-            </svg>
-          </div>
-          <div class="meta-info">
-            <span class="meta-label">创建于</span>
-            <span class="meta-value">{{
-              formatDateTime(currentNote.createdAt)
-            }}</span>
-          </div>
-        </div>
-        <div class="meta-divider"></div>
-        <div class="meta-item">
-          <div class="meta-icon-wrapper updated-icon">
-            <svg
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-            >
-              <path d="M4 4h8M12 4v8M12 8h-3" />
-            </svg>
-          </div>
-          <div class="meta-info">
-            <span class="meta-label">更新于</span>
-            <span class="meta-value">{{
-              formatTime(currentNote.updatedAt)
-            }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 分隔线 -->
-      <div class="content-divider"></div>
-
       <!-- Markdown 内容 -->
       <div class="markdown-content">
         <MarkdownRenderer :content="content" />
@@ -283,7 +244,7 @@ function handleEdit() {
 
 .header-left {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
   min-width: 0;
 }
@@ -315,6 +276,13 @@ function handleEdit() {
   height: 20px;
 }
 
+.header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
 .header-title {
   font-family: var(--font-display);
   font-size: 1.375rem;
@@ -325,6 +293,15 @@ function handleEdit() {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.header-time {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: var(--text-tertiary);
+  opacity: 0.7;
 }
 
 .header-right {
@@ -401,95 +378,6 @@ function handleEdit() {
 
 .content-body::-webkit-scrollbar-thumb:hover {
   background: var(--accent-primary);
-}
-
-/* ========================================
-   META CARD
-   ======================================== */
-.meta-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-lg);
-  flex-shrink: 0;
-  margin-bottom: 16px;
-  box-shadow: var(--shadow-sm);
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: 1;
-  min-width: 0;
-}
-
-.meta-icon-wrapper {
-  width: 14px;
-  height: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 3px;
-  flex-shrink: 0;
-  opacity: 0.6;
-}
-
-.created-icon {
-  background: transparent;
-  color: var(--text-tertiary);
-}
-
-.updated-icon {
-  background: transparent;
-  color: var(--text-tertiary);
-}
-
-.meta-icon-wrapper svg {
-  width: 12px;
-  height: 12px;
-}
-
-.meta-info {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  min-width: 0;
-}
-
-.meta-label {
-  font-family: var(--font-body);
-  font-size: 0.6875rem;
-  font-weight: 500;
-  text-transform: none;
-  letter-spacing: 0;
-  color: var(--text-tertiary);
-}
-
-.meta-value {
-  font-family:
-    ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, monospace;
-  font-size: 0.6875rem;
-  font-weight: 400;
-  color: var(--text-muted);
-  letter-spacing: 0.02em;
-}
-
-.meta-divider {
-  width: 1px;
-  height: 14px;
-  background: var(--border-light);
-  flex-shrink: 0;
-}
-
-/* ========================================
-   CONTENT DIVIDER
-   ======================================== */
-.content-divider {
-  display: none;
 }
 
 /* ========================================
@@ -682,15 +570,6 @@ function handleEdit() {
     padding: 0 20px 20px;
   }
 
-  .meta-card {
-    padding: 10px 14px;
-    margin-bottom: 12px;
-  }
-
-  .markdown-content {
-    padding: 16px 18px;
-  }
-
   .markdown-content {
     padding: 16px 18px;
     max-height: calc(100vh - 180px);
@@ -734,10 +613,6 @@ function handleEdit() {
 
   .content-body {
     padding: 0 16px 16px;
-  }
-
-  .meta-card {
-    padding: 8px 12px;
   }
 
   .markdown-content {
