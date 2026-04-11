@@ -24,8 +24,7 @@ type PetState =
   | "celebrate"
   | "peek"
   | "chase"
-  | "hide"
-  | "play-dead";
+  | "hide";
 type PetDirection = "left" | "right";
 
 interface PetPosition {
@@ -93,7 +92,6 @@ const CELEBRATE_DURATION = 3000;
 const PEEK_DURATION = 3000;
 const CHASE_DURATION = 5000;
 const HIDE_DURATION = 4000;
-const PLAY_DEAD_DURATION = 5000;
 
 // 当前主题
 const isDark = computed(() => appStore.theme === "dark");
@@ -181,8 +179,7 @@ function moveToRandomPosition() {
     petState.value === "celebrate" ||
     petState.value === "peek" ||
     petState.value === "chase" ||
-    petState.value === "hide" ||
-    petState.value === "play-dead"
+    petState.value === "hide"
   )
     return;
 
@@ -248,8 +245,6 @@ function changeState(newState: PetState) {
             changeState("celebrate");
           } else if (random < 0.85) {
             changeState("peek");
-          } else if (random < 0.9) {
-            changeState("play-dead");
           } else {
             moveToRandomPosition();
           }
@@ -351,11 +346,6 @@ function changeState(newState: PetState) {
         changeState("idle");
       }, HIDE_DURATION);
       break;
-    case "play-dead":
-      stateTimer.value = window.setTimeout(() => {
-        changeState("idle");
-      }, PLAY_DEAD_DURATION);
-      break;
   }
 }
 
@@ -373,7 +363,6 @@ function handlePetClick() {
       "smug",
       "shy",
       "celebrate",
-      "play-dead",
     ];
     changeState(reactions[Math.floor(Math.random() * reactions.length)]);
   }
@@ -385,7 +374,6 @@ function handleDragStart(e: MouseEvent) {
     petState.value === "sleeping" ||
     petState.value === "happy" ||
     petState.value === "fallen" ||
-    petState.value === "play-dead" ||
     petState.value === "celebrate" ||
     petState.value === "chase"
   )
@@ -796,12 +784,6 @@ defineExpose({
       <!-- 偷看效果 -->
       <div class="peek-effects" v-if="petState === 'peek'">
         <span class="peek-eyes">👀</span>
-      </div>
-
-      <!-- 装死效果 -->
-      <div class="play-dead-effects" v-if="petState === 'play-dead'">
-        <span class="soul">👻</span>
-        <span class="x-eyes">✖️✖️</span>
       </div>
     </div>
   </div>
@@ -2441,51 +2423,6 @@ defineExpose({
   50% {
     opacity: 0.3;
   }
-}
-
-/* ========================================
-   PLAY-DEAD EFFECTS - 装死效果
-   ======================================== */
-.pet-play-dead .pet-body {
-  transform: rotate(-90deg) translateY(5px);
-}
-
-.pet-play-dead .pet-shadow {
-  opacity: 0.3;
-}
-
-.play-dead-effects {
-  position: absolute;
-  inset: -20px;
-  pointer-events: none;
-}
-
-.soul {
-  position: absolute;
-  top: -30px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 24px;
-  animation: soul-float 2s ease-in-out infinite;
-}
-
-@keyframes soul-float {
-  0%,
-  100% {
-    transform: translateX(-50%) translateY(0);
-  }
-  50% {
-    transform: translateX(-50%) translateY(-10px);
-  }
-}
-
-.x-eyes {
-  position: absolute;
-  top: 30px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 10px;
-  letter-spacing: 4px;
 }
 
 /* ========================================
