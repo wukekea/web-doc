@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
 import { useAppStore } from "@/stores/app";
+import "./pet-direction.css";
 
 // 宠物状态类型
 type PetState =
@@ -24,8 +25,17 @@ type PetState =
   | "celebrate"
   | "peek"
   | "chase"
-  | "hide";
-type PetDirection = "left" | "right";
+  | "hide"
+  | "lying";
+
+// 宠物朝向：front(正面), left(左转), right(右转), back(背面), lying-left(向左躺), lying-right(向右躺)
+type PetDirection =
+  | "front"
+  | "left"
+  | "right"
+  | "back"
+  | "lying-left"
+  | "lying-right";
 
 interface PetPosition {
   x: number;
@@ -47,7 +57,7 @@ const appStore = useAppStore();
 // 宠物状态
 const isVisible = ref(true);
 const petState = ref<PetState>("idle");
-const petDirection = ref<PetDirection>("right");
+const petDirection = ref<PetDirection>("front");
 const position = ref<PetPosition>({ x: 50, y: window.innerHeight - 120 });
 const targetPosition = ref<PetPosition>({ x: 50, y: window.innerHeight - 120 });
 const isDragging = ref(false);
@@ -117,6 +127,15 @@ const petColors = computed(() => {
 
 // 添加脚印
 function addFootprint(x: number, y: number, direction: PetDirection) {
+  // 将方向转换为 left/right 用于脚印
+  const footprintDir: "left" | "right" =
+    direction === "left" || direction === "lying-left"
+      ? "left"
+      : direction === "right" || direction === "lying-right"
+        ? "right"
+        : Math.random() > 0.5
+          ? "left"
+          : "right";
   const now = Date.now();
   if (now - lastFootprintTime.value < FOOTPRINT_INTERVAL) return;
 
@@ -132,7 +151,7 @@ function addFootprint(x: number, y: number, direction: PetDirection) {
     x: footprintX,
     y: footprintY,
     isLeft: lastFootprintWasLeft.value,
-    direction: direction,
+    direction: footprintDir,
     createdAt: now,
   };
 
@@ -159,6 +178,28 @@ function getFootprintOpacity(footprint: Footprint): number {
   return Math.max(0, remaining / FOOTPRINT_LIFETIME);
 }
 
+// 更新宠物朝向（根据移动方向）
+function updateDirection(dx: number, dy: number) {
+  // 如果水平移动较大
+  if (Math.abs(dx) > Math.abs(dy) * 2) {
+    petDirection.value = dx > 0 ? "right" : "left";
+  } else if (Math.abs(dy) > Math.abs(dx) * 2) {
+    // 如果垂直移动较大
+    petDirection.value = dy > 0 ? "front" : "back";
+  } else {
+    // 斜向移动
+    if (dx > 0 && dy > 0) {
+      petDirection.value = "right";
+    } else if (dx > 0 && dy < 0) {
+      petDirection.value = "right";
+    } else if (dx < 0 && dy > 0) {
+      petDirection.value = "left";
+    } else {
+      petDirection.value = "left";
+    }
+  }
+}
+
 // 随机移动到新位置
 function moveToRandomPosition() {
   if (
@@ -179,21 +220,26 @@ function moveToRandomPosition() {
     petState.value === "celebrate" ||
     petState.value === "peek" ||
     petState.value === "chase" ||
-    petState.value === "hide"
+    petState.value === "hide" ||
+    petState.value === "lying"
   )
     return;
 
   const maxX = window.innerWidth - PET_SIZE;
   const maxY = window.innerHeight - PET_SIZE - 20;
 
+  const newX = Math.random() * maxX;
+  const newY = Math.random() * (maxY - 100) + 100;
+
   targetPosition.value = {
-    x: Math.random() * maxX,
-    y: Math.random() * (maxY - 100) + 100,
+    x: newX,
+    y: newY,
   };
 
   // 根据移动方向设置朝向
-  petDirection.value =
-    targetPosition.value.x > position.value.x ? "right" : "left";
+  const dx = newX - position.value.x;
+  const dy = newY - position.value.y;
+  updateDirection(dx, dy);
 
   petState.value = "walking";
 }
@@ -245,6 +291,8 @@ function changeState(newState: PetState) {
             changeState("celebrate");
           } else if (random < 0.85) {
             changeState("peek");
+          } else if (random < 0.88) {
+            changeState("lying");
           } else {
             moveToRandomPosition();
           }
@@ -346,6 +394,11 @@ function changeState(newState: PetState) {
         changeState("idle");
       }, HIDE_DURATION);
       break;
+    case "lying":
+      stateTimer.value = window.setTimeout(() => {
+        changeState("idle");
+      }, 4000);
+      break;
   }
 }
 
@@ -375,7 +428,8 @@ function handleDragStart(e: MouseEvent) {
     petState.value === "happy" ||
     petState.value === "fallen" ||
     petState.value === "celebrate" ||
-    petState.value === "chase"
+    petState.value === "chase" ||
+    petState.value === "lying"
   )
     return;
 
@@ -393,6 +447,8 @@ function handleDragStart(e: MouseEvent) {
   }
 
   petState.value = "walking";
+  // 拖动时恢复正面朝向
+  petDirection.value = "front";
 
   // 添加全局鼠标事件监听
   window.addEventListener("mousemove", handleDragging);
@@ -406,13 +462,19 @@ function handleDragging(e: MouseEvent) {
   const mouseX = e.clientX;
   const mouseY = e.clientY;
 
+  // 计算移动方向
+  const newX = mouseX - dragOffset.value.x;
+  const newY = mouseY - dragOffset.value.y;
+  const dx = newX - position.value.x;
+  const dy = newY - position.value.y;
+
   // 根据移动方向设置朝向
-  petDirection.value = mouseX > position.value.x ? "right" : "left";
+  updateDirection(dx, dy);
 
   // 更新位置
   position.value = {
-    x: mouseX - dragOffset.value.x,
-    y: mouseY - dragOffset.value.y,
+    x: newX,
+    y: newY,
   };
 
   // 添加脚印
@@ -444,6 +506,8 @@ function handleDragEnd() {
   window.removeEventListener("mousemove", handleDragging);
   window.removeEventListener("mouseup", handleDragEnd);
 
+  // 恢复正面朝向
+  petDirection.value = "front";
   // 恢复空闲状态
   changeState("idle");
 }
@@ -462,11 +526,13 @@ function animate() {
     if (distance > 5) {
       const speed = 3;
       const ratio = speed / distance;
-      position.value.x += dx * ratio;
-      position.value.y += dy * ratio;
+      const moveX = dx * ratio;
+      const moveY = dy * ratio;
+      position.value.x += moveX;
+      position.value.y += moveY;
 
       // 根据移动方向设置朝向
-      petDirection.value = dx > 0 ? "right" : "left";
+      updateDirection(moveX, moveY);
 
       // 添加脚印
       addFootprint(position.value.x, position.value.y, petDirection.value);
@@ -486,11 +552,13 @@ function animate() {
     ) {
       // 固定速度移动
       const ratio = WALK_SPEED / distance;
-      position.value.x += dx * ratio;
-      position.value.y += dy * ratio;
+      const moveX = dx * ratio;
+      const moveY = dy * ratio;
+      position.value.x += moveX;
+      position.value.y += moveY;
 
       // 根据移动方向设置朝向
-      petDirection.value = dx > 0 ? "right" : "left";
+      updateDirection(moveX, moveY);
 
       // 添加脚印
       addFootprint(position.value.x, position.value.y, petDirection.value);
@@ -502,6 +570,8 @@ function animate() {
       // 到达目标位置，停止行走状态
       position.value.x = targetPosition.value.x;
       position.value.y = targetPosition.value.y;
+      // 恢复正面朝向
+      petDirection.value = "front";
       changeState("idle");
     }
   }
@@ -600,7 +670,7 @@ defineExpose({
   <div
     v-if="isVisible"
     class="desktop-pet"
-    :class="[`pet-${petState}`, `pet-${petDirection}`]"
+    :class="`pet-${petState} pet-${petDirection}`"
   >
     <!-- 脚印容器 -->
     <div class="footprints-container">

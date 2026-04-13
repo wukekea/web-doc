@@ -1,0 +1,872 @@
+/* ========================================
+   宠物方向转向样式
+   宠物可以向四个方向转动：
+   - front: 正面（面朝用户）
+   - left: 向左
+   - right: 向右
+   - back: 背面
+   - lying-left: 向左躺
+   - lying-right: 向右躺
+   ======================================== */
+
+/* ========================================
+   容器转向动画
+   ======================================== */
+.pet-container {
+  transition: transform 0.3s ease;
+}
+
+/* ========================================
+   正面 - 默认状态
+   ======================================== */
+.pet-front .pet-body {
+  transform: rotateY(0deg);
+}
+
+/* 正面时眼睛正常显示 */
+.pet-front .eye-left,
+.pet-front .eye-right {
+  transform: scale(1);
+}
+
+/* 正面时腮红对称 */
+.pet-front .pet-cheek.cheek-left,
+.pet-front .pet-cheek.cheek-right {
+  opacity: 0.6;
+  transform: scale(1);
+}
+
+/* ========================================
+   背面 - 背对用户
+   ======================================== */
+.pet-back .pet-body {
+  transform: rotateY(180deg);
+}
+
+/* 背面时隐藏脸部元素 */
+.pet-back .pet-face {
+  opacity: 0.3;
+}
+
+.pet-back .pet-eyes {
+  opacity: 0;
+}
+
+.pet-back .pet-mouth {
+  opacity: 0;
+}
+
+.pet-back .pet-cheek {
+  opacity: 0;
+}
+
+/* 背面时耳朵更突出 */
+.pet-back .ear-left {
+  transform: rotate(-15deg) scale(1.1);
+}
+
+.pet-back .ear-right {
+  transform: rotate(15deg) scale(1.1);
+}
+
+/* 背面时手臂在前面 */
+.pet-back .arm-left {
+  transform: rotate(20deg) translateX(-3px);
+  z-index: 10;
+}
+
+.pet-back .arm-right {
+  transform: rotate(-20deg) translateX(3px);
+  z-index: 10;
+}
+
+/* 向左转 - 显示右侧脸 */
+.pet-left .pet-body {
+  transform: rotateY(-30deg);
+}
+
+/* 向右转 - 显示左侧脸 */
+.pet-right .pet-body {
+  transform: rotateY(30deg);
+}
+
+/* 背面 */
+.pet-back .pet-body {
+  transform: rotateY(180deg);
+}
+
+/* ========================================
+   向左看时的脸部调整
+   ======================================== */
+.pet-left .pet-face {
+  transform: translateX(-3px);
+}
+
+.pet-left .pet-eyes {
+  transform: translateX(-50%) translateX(2px);
+}
+
+.pet-left .eye-left {
+  transform: scale(0.85);
+}
+
+.pet-left .eye-right {
+  transform: scale(1.1);
+}
+
+.pet-left .eye-left .eye-shine {
+  right: 1px;
+}
+
+.pet-left .eye-right .eye-shine {
+  right: 3px;
+}
+
+.pet-left .pet-cheek.cheek-left {
+  opacity: 0.4;
+  transform: scale(0.8);
+}
+
+.pet-left .pet-cheek.cheek-right {
+  opacity: 0.8;
+  transform: scale(1.1);
+}
+
+.pet-left .pet-mouth {
+  transform: translateX(-50%) translateX(2px);
+}
+
+.pet-left .ear-left {
+  transform: rotate(-15deg) translateX(3px);
+}
+
+.pet-left .ear-right {
+  transform: rotate(15deg) translateX(8px) translateY(-2px);
+}
+
+/* 向左转时：宠物面向左侧，右侧身体靠近观众，右手在前 */
+.pet-left .arm-left {
+  transform: rotate(20deg) translateX(-5px);
+  z-index: 1;
+  opacity: 0.7;
+}
+
+.pet-left .arm-right {
+  transform: rotate(-20deg) translateX(3px);
+  z-index: 10;
+}
+
+/* ========================================
+   向右看时的脸部调整
+   ======================================== */
+.pet-right .pet-face {
+  transform: translateX(3px);
+}
+
+.pet-right .pet-eyes {
+  transform: translateX(-50%) translateX(-2px);
+}
+
+.pet-right .eye-left {
+  transform: scale(1.1);
+}
+
+.pet-right .eye-right {
+  transform: scale(0.85);
+}
+
+.pet-right .eye-left .eye-shine {
+  right: 3px;
+}
+
+.pet-right .eye-right .eye-shine {
+  right: 1px;
+}
+
+.pet-right .pet-cheek.cheek-left {
+  opacity: 0.8;
+  transform: scale(1.1);
+}
+
+.pet-right .pet-cheek.cheek-right {
+  opacity: 0.4;
+  transform: scale(0.8);
+}
+
+.pet-right .pet-mouth {
+  transform: translateX(-50%) translateX(-2px);
+}
+
+.pet-right .ear-left {
+  transform: rotate(-15deg) translateX(-8px) translateY(-2px);
+}
+
+.pet-right .ear-right {
+  transform: rotate(15deg) translateX(-3px);
+}
+
+/* 向右转时：宠物面向右侧，左侧身体靠近观众，左手在前 */
+.pet-right .arm-left {
+  transform: rotate(20deg) translateX(5px);
+  z-index: 10;
+}
+
+.pet-right .arm-right {
+  transform: rotate(-20deg) translateX(-5px);
+  z-index: 1;
+  opacity: 0.7;
+}
+
+/* 左手向前（靠近观众） */
+.pet-right .arm-left {
+  transform: rotate(20deg) translateX(-3px);
+  z-index: 10;
+}
+
+/* 右手向后 */
+.pet-right .arm-right {
+  transform: rotate(-20deg) translateX(5px);
+  z-index: 1;
+  opacity: 0.7;
+}
+
+.pet-right .leg-left {
+  transform: translateX(-4px); /* 左腿在前 */
+}
+
+.pet-right .leg-right {
+  transform: translateX(3px); /* 右腿在后 */
+}
+
+/* ========================================
+   行走时的方向动画
+   ======================================== */
+.pet-walking.pet-left .pet-body {
+  animation: walk-left 0.4s ease-in-out infinite;
+}
+
+.pet-walking.pet-right .pet-body {
+  animation: walk-right 0.4s ease-in-out infinite;
+}
+
+@keyframes walk-left {
+  0%,
+  100% {
+    transform: rotateY(-30deg) translateY(0);
+  }
+  50% {
+    transform: rotateY(-30deg) translateY(-5px);
+  }
+}
+
+@keyframes walk-right {
+  0%,
+  100% {
+    transform: rotateY(30deg) translateY(0);
+  }
+  50% {
+    transform: rotateY(30deg) translateY(-5px);
+  }
+}
+
+/* 向左走时脚步 */
+.pet-walking.pet-left .leg-left {
+  animation: leg-walk-left-forward 0.4s ease-in-out infinite;
+}
+
+.pet-walking.pet-left .leg-right {
+  animation: leg-walk-left-back 0.4s ease-in-out infinite;
+}
+
+.pet-walking.pet-right .leg-left {
+  animation: leg-walk-right-back 0.4s ease-in-out infinite;
+}
+
+.pet-walking.pet-right .leg-right {
+  animation: leg-walk-right-forward 0.4s ease-in-out infinite;
+}
+
+@keyframes leg-walk-left-forward {
+  0%,
+  100% {
+    transform: translateX(-2px) translateY(0);
+  }
+  50% {
+    transform: translateX(-4px) translateY(-3px);
+  }
+}
+
+@keyframes leg-walk-left-back {
+  0%,
+  100% {
+    transform: translateX(3px) translateY(-3px);
+  }
+  50% {
+    transform: translateX(3px) translateY(0);
+  }
+}
+
+@keyframes leg-walk-right-forward {
+  0%,
+  100% {
+    transform: translateX(2px) translateY(0);
+  }
+  50% {
+    transform: translateX(4px) translateY(-3px);
+  }
+}
+
+@keyframes leg-walk-right-back {
+  0%,
+  100% {
+    transform: translateX(-3px) translateY(-3px);
+  }
+  50% {
+    transform: translateX(-3px) translateY(0);
+  }
+}
+
+/* 行走时手臂摆动 */
+.pet-walking.pet-left .arm-left {
+  animation: arm-swing-left-back 0.4s ease-in-out infinite;
+}
+
+.pet-walking.pet-left .arm-right {
+  animation: arm-swing-left-dir 0.4s ease-in-out infinite;
+}
+
+.pet-walking.pet-right .arm-left {
+  animation: arm-swing-right-dir 0.4s ease-in-out infinite;
+}
+
+.pet-walking.pet-right .arm-right {
+  animation: arm-swing-right-back 0.4s ease-in-out infinite;
+}
+
+@keyframes arm-swing-left-dir {
+  /* 右手向前摆动 */
+  0%,
+  100% {
+    transform: rotate(-20deg) translateX(3px);
+  }
+  50% {
+    transform: rotate(-30deg) translateX(3px);
+  }
+}
+
+@keyframes arm-swing-left-back {
+  /* 左手向后摆动 */
+  0%,
+  100% {
+    transform: rotate(20deg) translateX(-5px);
+  }
+  50% {
+    transform: rotate(10deg) translateX(-5px);
+  }
+}
+
+@keyframes arm-swing-right-dir {
+  /* 左手向前摆动 */
+  0%,
+  100% {
+    transform: rotate(20deg) translateX(5px);
+  }
+  50% {
+    transform: rotate(30deg) translateX(5px);
+  }
+}
+
+@keyframes arm-swing-right-back {
+  /* 右手向后摆动 */
+  0%,
+  100% {
+    transform: rotate(-20deg) translateX(-5px);
+  }
+  50% {
+    transform: rotate(-10deg) translateX(-5px);
+  }
+}
+
+/* ========================================
+   躺下状态 - 向左躺
+   ======================================== */
+.pet-lying-left .pet-body {
+  transform: rotate(-90deg);
+  animation: lying-breathe-left 2s ease-in-out infinite;
+}
+
+.pet-lying-left .pet-shadow {
+  transform: translateX(-50%) scaleY(0.5);
+  opacity: 0.5;
+}
+
+.pet-lying-left .pet-face {
+  transform: translateY(-3px);
+}
+
+.pet-lying-left .pet-eyes {
+  top: 28px;
+  transform: translateX(-50%);
+}
+
+.pet-lying-left .eye {
+  transform: scaleY(0.8);
+}
+
+.pet-lying-left .pet-cheek.cheek-left {
+  left: 8px;
+  top: 40px;
+}
+
+.pet-lying-left .pet-cheek.cheek-right {
+  right: 8px;
+  top: 40px;
+}
+
+.pet-lying-left .pet-mouth {
+  top: 48px;
+}
+
+.pet-lying-left .ear-left {
+  transform: rotate(-75deg);
+  left: 8px;
+}
+
+.pet-lying-left .ear-right {
+  transform: rotate(75deg);
+  right: 8px;
+}
+
+.pet-lying-left .arm-left {
+  transform: rotate(-70deg) translateX(-10px) translateY(5px);
+}
+
+.pet-lying-left .arm-right {
+  transform: rotate(70deg) translateX(10px) translateY(5px);
+}
+
+.pet-lying-left .leg-left {
+  transform: translateX(-15px);
+}
+
+.pet-lying-left .leg-right {
+  transform: translateX(15px);
+}
+
+@keyframes lying-breathe-left {
+  0%,
+  100% {
+    transform: rotate(-90deg) scale(1);
+  }
+  50% {
+    transform: rotate(-90deg) scale(1.02);
+  }
+}
+
+/* ========================================
+   躺下状态 - 向右躺
+   ======================================== */
+.pet-lying-right .pet-body {
+  transform: rotate(90deg);
+  animation: lying-breathe-right 2s ease-in-out infinite;
+}
+
+.pet-lying-right .pet-shadow {
+  transform: translateX(-50%) scaleY(0.5);
+  opacity: 0.5;
+}
+
+.pet-lying-right .pet-face {
+  transform: translateY(-3px);
+}
+
+.pet-lying-right .pet-eyes {
+  top: 28px;
+  transform: translateX(-50%);
+}
+
+.pet-lying-right .eye {
+  transform: scaleY(0.8);
+}
+
+.pet-lying-right .pet-cheek.cheek-left {
+  left: 8px;
+  top: 40px;
+}
+
+.pet-lying-right .pet-cheek.cheek-right {
+  right: 8px;
+  top: 40px;
+}
+
+.pet-lying-right .pet-mouth {
+  top: 48px;
+}
+
+.pet-lying-right .ear-left {
+  transform: rotate(-75deg);
+  left: 8px;
+}
+
+.pet-lying-right .ear-right {
+  transform: rotate(75deg);
+  right: 8px;
+}
+
+.pet-lying-right .arm-left {
+  transform: rotate(-70deg) translateX(10px) translateY(5px);
+}
+
+.pet-lying-right .arm-right {
+  transform: rotate(70deg) translateX(-10px) translateY(5px);
+}
+
+.pet-lying-right .leg-left {
+  transform: translateX(15px);
+}
+
+.pet-lying-right .leg-right {
+  transform: translateX(-15px);
+}
+
+@keyframes lying-breathe-right {
+  0%,
+  100% {
+    transform: rotate(90deg) scale(1);
+  }
+  50% {
+    transform: rotate(90deg) scale(1.02);
+  }
+}
+
+/* 躺下时显示睡眠气泡 */
+.pet-lying-left .sleep-bubble,
+.pet-lying-right .sleep-bubble {
+  display: block;
+}
+
+/* ========================================
+   跳跃时的方向
+   ======================================== */
+.pet-jumping.pet-front .pet-body {
+  animation: jump-front 0.8s ease-in-out;
+}
+
+.pet-jumping.pet-left .pet-body {
+  animation: jump-left 0.8s ease-in-out;
+}
+
+.pet-jumping.pet-right .pet-body {
+  animation: jump-right 0.8s ease-in-out;
+}
+
+.pet-jumping.pet-back .pet-body {
+  animation: jump-back 0.8s ease-in-out;
+}
+
+@keyframes jump-front {
+  0%,
+  100% {
+    transform: rotateY(0deg) translateY(0) scale(1, 1);
+  }
+  50% {
+    transform: rotateY(0deg) translateY(-40px) scale(0.95, 1.05);
+  }
+}
+
+@keyframes jump-back {
+  0%,
+  100% {
+    transform: rotateY(180deg) translateY(0) scale(1, 1);
+  }
+  50% {
+    transform: rotateY(180deg) translateY(-40px) scale(0.95, 1.05);
+  }
+}
+
+@keyframes jump-left {
+  0%,
+  100% {
+    transform: rotateY(-30deg) translateY(0) scale(1, 1);
+  }
+  50% {
+    transform: rotateY(-30deg) translateY(-40px) scale(0.95, 1.05);
+  }
+}
+
+@keyframes jump-right {
+  0%,
+  100% {
+    transform: rotateY(30deg) translateY(0) scale(1, 1);
+  }
+  50% {
+    transform: rotateY(30deg) translateY(-40px) scale(0.95, 1.05);
+  }
+}
+
+/* ========================================
+   睡觉时的方向
+   ======================================== */
+.pet-sleeping.pet-front .pet-body {
+  animation: sleep-with-direction 2s ease-in-out infinite;
+  --rotation: 0deg;
+}
+
+.pet-sleeping.pet-left .pet-body {
+  animation: sleep-with-direction 2s ease-in-out infinite;
+  --rotation: -30deg;
+}
+
+.pet-sleeping.pet-right .pet-body {
+  animation: sleep-with-direction 2s ease-in-out infinite;
+  --rotation: 30deg;
+}
+
+.pet-sleeping.pet-back .pet-body {
+  animation: sleep-with-direction 2s ease-in-out infinite;
+  --rotation: 180deg;
+}
+
+@keyframes sleep-with-direction {
+  0%,
+  100% {
+    transform: rotateY(var(--rotation, 0deg)) translateY(0) scale(1);
+  }
+  50% {
+    transform: rotateY(var(--rotation, 0deg)) translateY(-2px) scale(1.01);
+  }
+}
+
+/* ========================================
+   其他状态的方向适配
+   ======================================== */
+
+/* 开心 */
+.pet-happy.pet-front .pet-body {
+  animation: happy-front 1.5s ease-in-out;
+}
+
+.pet-happy.pet-left .pet-body {
+  animation: happy-left 1.5s ease-in-out;
+}
+
+.pet-happy.pet-right .pet-body {
+  animation: happy-right 1.5s ease-in-out;
+}
+
+.pet-happy.pet-back .pet-body {
+  animation: happy-back 1.5s ease-in-out;
+}
+
+@keyframes happy-front {
+  0% {
+    transform: rotateY(0deg) scale(1);
+  }
+  25% {
+    transform: rotateY(0deg) scale(1.1) rotate(-5deg);
+  }
+  50% {
+    transform: rotateY(0deg) scale(1.15) rotate(5deg);
+  }
+  75% {
+    transform: rotateY(0deg) scale(1.1) rotate(-3deg);
+  }
+  100% {
+    transform: rotateY(0deg) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes happy-back {
+  0% {
+    transform: rotateY(180deg) scale(1);
+  }
+  25% {
+    transform: rotateY(180deg) scale(1.1) rotate(-5deg);
+  }
+  50% {
+    transform: rotateY(180deg) scale(1.15) rotate(5deg);
+  }
+  75% {
+    transform: rotateY(180deg) scale(1.1) rotate(-3deg);
+  }
+  100% {
+    transform: rotateY(180deg) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes happy-left {
+  0% {
+    transform: rotateY(-30deg) scale(1);
+  }
+  25% {
+    transform: rotateY(-30deg) scale(1.1) rotate(-5deg);
+  }
+  50% {
+    transform: rotateY(-30deg) scale(1.15) rotate(5deg);
+  }
+  75% {
+    transform: rotateY(-30deg) scale(1.1) rotate(-3deg);
+  }
+  100% {
+    transform: rotateY(-30deg) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes happy-right {
+  0% {
+    transform: rotateY(30deg) scale(1);
+  }
+  25% {
+    transform: rotateY(30deg) scale(1.1) rotate(-5deg);
+  }
+  50% {
+    transform: rotateY(30deg) scale(1.15) rotate(5deg);
+  }
+  75% {
+    transform: rotateY(30deg) scale(1.1) rotate(-3deg);
+  }
+  100% {
+    transform: rotateY(30deg) scale(1) rotate(0deg);
+  }
+}
+
+/* 惊吓 */
+.pet-scared.pet-left .eye,
+.pet-scared.pet-right .eye {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  transform: scale(1.2);
+}
+
+/* 思考 */
+.pet-thinking.pet-left .arm-left {
+  transform: rotate(-60deg) translateY(-10px) translateX(5px);
+}
+
+.pet-thinking.pet-right .arm-right {
+  transform: rotate(60deg) translateY(-10px) translateX(-5px);
+}
+
+/* 打招呼 */
+.pet-hello.pet-front .arm-right {
+  animation: wave-hand-front 0.3s ease-in-out infinite;
+}
+
+.pet-hello.pet-left .arm-right {
+  animation: wave-hand-left-facing 0.3s ease-in-out infinite;
+}
+
+.pet-hello.pet-right .arm-right {
+  animation: wave-hand-right-facing 0.3s ease-in-out infinite;
+}
+
+.pet-hello.pet-back .arm-left {
+  animation: wave-hand-back 0.3s ease-in-out infinite;
+}
+
+@keyframes wave-hand-front {
+  0%,
+  100% {
+    transform: rotate(-60deg);
+  }
+  50% {
+    transform: rotate(-30deg);
+  }
+}
+
+@keyframes wave-hand-back {
+  0%,
+  100% {
+    transform: rotate(60deg);
+  }
+  50% {
+    transform: rotate(30deg);
+  }
+}
+
+/* ========================================
+   惊吓方向适配
+   ======================================== */
+.pet-scared.pet-front .eye,
+.pet-scared.pet-left .eye,
+.pet-scared.pet-right .eye {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  transform: scale(1.2);
+}
+
+/* ========================================
+   思考方向适配
+   ======================================== */
+.pet-thinking.pet-front .arm-left {
+  transform: rotate(-60deg) translateY(-10px);
+}
+
+.pet-thinking.pet-left .arm-left {
+  transform: rotate(-60deg) translateY(-10px) translateX(5px);
+}
+
+.pet-thinking.pet-right .arm-right {
+  transform: rotate(60deg) translateY(-10px) translateX(-5px);
+}
+
+.pet-thinking.pet-back .arm-right {
+  transform: rotate(-60deg) translateY(-10px);
+}
+
+@keyframes wave-hand-left-facing {
+  0%,
+  100% {
+    transform: rotate(-60deg) translateX(3px);
+  }
+  50% {
+    transform: rotate(-30deg) translateX(3px);
+  }
+}
+
+@keyframes wave-hand-right-facing {
+  0%,
+  100% {
+    transform: rotate(-60deg) translateX(3px);
+  }
+  50% {
+    transform: rotate(-30deg) translateX(3px);
+  }
+}
+
+/* ========================================
+   响应式适配
+   ======================================== */
+@media (max-width: 640px) {
+  .pet-left .pet-eyes,
+  .pet-right .pet-eyes {
+    gap: 8px;
+  }
+
+  .pet-left .eye-left,
+  .pet-right .eye-right {
+    transform: scale(0.8);
+  }
+
+  .pet-left .eye-right,
+  .pet-right .eye-left {
+    transform: scale(0.95);
+  }
+
+  /* 躺下状态的响应式调整 */
+  .pet-lying-left .pet-body,
+  .pet-lying-right .pet-body {
+    transform: rotate(-90deg) scale(0.8);
+  }
+
+  .pet-lying-right .pet-body {
+    transform: rotate(90deg) scale(0.8);
+  }
+
+  .pet-lying-left .pet-face,
+  .pet-lying-right .pet-face {
+    transform: translateY(-3px) scale(0.8);
+  }
+}
