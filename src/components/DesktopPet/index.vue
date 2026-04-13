@@ -65,6 +65,66 @@ const dragOffset = ref<PetPosition>({ x: 0, y: 0 });
 const animationFrameId = ref<number | null>(null);
 const stateTimer = ref<number | null>(null);
 
+// 调试模式
+const debugMode = ref(false);
+
+// 调试面板位置和拖动状态
+const debugPanelPosition = ref<PetPosition>({ x: 20, y: 60 });
+const isDebugPanelDragging = ref(false);
+const debugPanelDragOffset = ref<PetPosition>({ x: 0, y: 0 });
+
+// 所有可用的动作状态
+const allStates: PetState[] = [
+  "idle",
+  "walking",
+  "jumping",
+  "sleeping",
+  "happy",
+  "crying",
+  "angry",
+  "fallen",
+  "scared",
+  "thinking",
+  "smug",
+  "shy",
+  "confused",
+  "hello",
+  "sneeze",
+  "yawn",
+  "scratch",
+  "celebrate",
+  "peek",
+  "chase",
+  "hide",
+  "lying",
+];
+
+// 动作名称映射
+const stateNames: Record<PetState, string> = {
+  idle: "空闲",
+  walking: "行走",
+  jumping: "跳跃",
+  sleeping: "睡觉",
+  happy: "开心",
+  crying: "大哭",
+  angry: "生气",
+  fallen: "摔倒",
+  scared: "惊吓",
+  thinking: "思考",
+  smug: "得意",
+  shy: "害羞",
+  confused: "疑惑",
+  hello: "打招呼",
+  sneeze: "打喷嚏",
+  yawn: "打哈欠",
+  scratch: "挠头",
+  celebrate: "庆祝",
+  peek: "偷看",
+  chase: "追逐",
+  hide: "躲藏",
+  lying: "躺下",
+};
+
 // 脚印状态
 const footprints = ref<Footprint[]>([]);
 const lastFootprintTime = ref(0);
@@ -403,9 +463,13 @@ function changeState(newState: PetState) {
 }
 
 // 点击宠物
-function handlePetClick() {
+function handlePetClick(e: MouseEvent) {
   // 如果正在拖动，不处理点击
   if (isDragging.value) return;
+
+  // 如果点击的是调试按钮，不处理
+  const target = e.target as HTMLElement;
+  if (target.closest(".debug-panel") || target.closest(".debug-btn")) return;
 
   if (petState.value !== "sleeping") {
     // 随机触发不同反应
@@ -512,6 +576,49 @@ function handleDragEnd() {
   changeState("idle");
 }
 
+// 开始拖动调试面板
+function handleDebugPanelDragStart(e: MouseEvent) {
+  isDebugPanelDragging.value = true;
+  debugPanelDragOffset.value = {
+    x: e.clientX - debugPanelPosition.value.x,
+    y: e.clientY - debugPanelPosition.value.y,
+  };
+
+  window.addEventListener("mousemove", handleDebugPanelDragging);
+  window.addEventListener("mouseup", handleDebugPanelDragEnd);
+}
+
+// 拖动调试面板中
+function handleDebugPanelDragging(e: MouseEvent) {
+  if (!isDebugPanelDragging.value) return;
+
+  let newX = e.clientX - debugPanelDragOffset.value.x;
+  let newY = e.clientY - debugPanelDragOffset.value.y;
+
+  // 限制在窗口范围内
+  const panelWidth = 280;
+  const panelHeight = 400;
+  const maxX = window.innerWidth - panelWidth;
+  const maxY = window.innerHeight - panelHeight;
+
+  if (newX < 0) newX = 0;
+  if (newX > maxX) newX = maxX;
+  if (newY < 60) newY = 60; // 留出工具栏空间
+  if (newY > maxY) newY = maxY;
+
+  debugPanelPosition.value = { x: newX, y: newY };
+}
+
+// 结束拖动调试面板
+function handleDebugPanelDragEnd() {
+  if (!isDebugPanelDragging.value) return;
+
+  isDebugPanelDragging.value = false;
+
+  window.removeEventListener("mousemove", handleDebugPanelDragging);
+  window.removeEventListener("mouseup", handleDebugPanelDragEnd);
+}
+
 // 动画循环
 function animate() {
   // 清理过期的脚印
@@ -615,6 +722,21 @@ onMounted(() => {
   if (savedState !== null) {
     isVisible.value = savedState === "true";
   }
+  // 从存储加载调试模式
+  const savedDebugMode = localStorage.getItem("pet-debug-mode");
+  if (savedDebugMode !== null) {
+    debugMode.value = savedDebugMode === "true";
+  }
+  // 从存储加载调试面板位置
+  const savedPanelPosition = localStorage.getItem("pet-debug-panel-position");
+  if (savedPanelPosition) {
+    try {
+      const pos = JSON.parse(savedPanelPosition);
+      debugPanelPosition.value = pos;
+    } catch (e) {
+      // 忽略解析错误
+    }
+  }
 
   if (isVisible.value) {
     animate();
@@ -630,6 +752,10 @@ onMounted(() => {
 
   // 暴露全局方法
   (window as any).togglePet = togglePet;
+  (window as any).togglePetDebug = () => {
+    debugMode.value = !debugMode.value;
+    localStorage.setItem("pet-debug-mode", String(debugMode.value));
+  };
 });
 
 // 处理鼠标移动（用于追逐）
@@ -652,6 +778,8 @@ onBeforeUnmount(() => {
   window.removeEventListener("mousemove", handleDragging);
   window.removeEventListener("mousemove", handleMouseMove);
   window.removeEventListener("mouseup", handleDragEnd);
+  window.removeEventListener("mousemove", handleDebugPanelDragging);
+  window.removeEventListener("mouseup", handleDebugPanelDragEnd);
 });
 
 // 监听可见性变化，保存到存储
@@ -659,10 +787,21 @@ watch(isVisible, (value) => {
   localStorage.setItem("pet-visibility", String(value));
 });
 
+// 监听调试模式变化，保存到存储
+watch(debugMode, (value) => {
+  localStorage.setItem("pet-debug-mode", String(value));
+});
+
+// 监听调试面板位置变化，保存到存储
+watch(debugPanelPosition, (value) => {
+  localStorage.setItem("pet-debug-panel-position", JSON.stringify(value));
+});
+
 // 暴露方法供外部调用
 defineExpose({
   togglePet,
   isVisible,
+  debugMode,
 });
 </script>
 
@@ -854,6 +993,37 @@ defineExpose({
       <!-- 偷看效果 -->
       <div class="peek-effects" v-if="petState === 'peek'">
         <span class="peek-eyes">👀</span>
+      </div>
+    </div>
+
+    <!-- 调试面板 -->
+    <div
+      v-if="debugMode"
+      class="debug-panel"
+      :class="{ 'is-dragging': isDebugPanelDragging }"
+      :style="{
+        left: `${debugPanelPosition.x}px`,
+        top: `${debugPanelPosition.y}px`,
+      }"
+      @click.stop
+    >
+      <div class="debug-header" @mousedown="handleDebugPanelDragStart">
+        <span class="debug-title">🎮 宠物动作调试</span>
+        <button class="debug-close" @click.stop="debugMode = false">✕</button>
+      </div>
+      <div class="debug-grid">
+        <button
+          v-for="state in allStates"
+          :key="state"
+          class="debug-btn"
+          :class="{ 'debug-btn-active': petState === state }"
+          @click.stop="changeState(state)"
+        >
+          {{ stateNames[state] }}
+        </button>
+      </div>
+      <div class="debug-footer">
+        <span class="debug-info">当前: {{ stateNames[petState] }}</span>
       </div>
     </div>
   </div>
@@ -2568,5 +2738,118 @@ defineExpose({
   .happy-effects .heart {
     font-size: 12px;
   }
+}
+
+/* ========================================
+   DEBUG PANEL - 调试面板
+   ======================================== */
+.debug-panel {
+  position: fixed;
+  z-index: 1001;
+  background: v-bind(
+    "isDark ? 'rgba(31, 41, 55, 0.95)' : 'rgba(255, 255, 255, 0.95)'"
+  );
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  padding: 16px;
+  width: 280px;
+  max-width: 280px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  pointer-events: auto;
+}
+
+.debug-panel.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.debug-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: grab;
+}
+
+.debug-header:active {
+  cursor: grabbing;
+}
+
+.debug-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: v-bind("isDark ? '#f9fafb' : '#1f2937'");
+}
+
+.debug-close {
+  background: v-bind("isDark ? '#4b5563' : '#e5e7eb'");
+  color: v-bind("isDark ? '#f9fafb' : '#1f2937'");
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.debug-close:hover {
+  background: v-bind("isDark ? '#ef4444' : '#d97706'");
+  transform: scale(1.1);
+}
+
+.debug-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.debug-btn {
+  padding: 10px 8px;
+  background: v-bind("isDark ? '#374151' : '#e5e7eb'");
+  color: v-bind("isDark ? '#f9fafb' : '#1f2937'");
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.debug-btn:hover {
+  background: v-bind("isDark ? '#4b5563' : '#d1d5db'");
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.debug-btn-active {
+  background: v-bind("isDark ? '#8b5cf6' : '#3b82f6'");
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 0 0 0 2px rgba(139, 92, 246, 0.4);
+}
+
+.debug-footer {
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.debug-info {
+  font-size: 12px;
+  color: v-bind("isDark ? '#9ca3af' : '#6b7280'");
 }
 </style>
